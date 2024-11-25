@@ -1,0 +1,30 @@
+{
+  "app": {
+    "title": "Zouk Korea",
+    "description": "Zouk Korea is a Latin dance club and academy centered around Zouk lovers.",
+    "copyright": "Copyright © {year} Zouk Korea"
+  },
+  "nav": {
+    "schedule": "Schedule",
+    "clubInfo": "Club Info"
+  },
+  "schedule": {
+    "title": "Class Schedule",
+    "description": "Google calendar will be connected.",
+    "viewNotionSchedule": "View Google Calendar",
+    "onlineClasses": "Online Classes",
+    "workshopAndFestival": "Workshop & Festival",
+    "weekdays": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    }
+  },
+  "clubs": {
+    "title": "Club Info"
+  }
+}

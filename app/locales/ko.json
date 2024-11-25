@@ -1,0 +1,30 @@
+{
+  "app": {
+    "title": "Zouk Korea",
+    "description": "Zouk Korea는 Zouk를 사랑하는 사람 중심으로 구성된 라틴댄스 동호회입니다.",
+    "copyright": "Copyright © {year} Zouk Korea"
+  },
+  "nav": {
+    "schedule": "일정",
+    "clubInfo": "동호회 소개"
+  },
+  "schedule": {
+    "title": "수업 일정",
+    "description": "Google 캘린더.",
+    "viewNotionSchedule": "Google 캘린더",
+    "onlineClasses": "온라인 수업",
+    "workshopAndFestival": "워크샵 & 페스티벌",
+    "weekdays": {
+      "monday": "월요일",
+      "tuesday": "화요일",
+      "wednesday": "수요일",
+      "thursday": "목요일",
+      "friday": "금요일",
+      "saturday": "토요일",
+      "sunday": "일요일"
+    }
+  },
+  "clubs": {
+    "title": "동호회 소개"
+  }
+}
