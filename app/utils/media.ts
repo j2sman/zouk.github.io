@@ -1,4 +1,7 @@
 // 소셜 미디어 아이콘과 색상 설정
+
+import type { UrlType } from "~/database/clubinfo";
+
 /** @type {import('~/database/clubinfo').UrlType} 타입의 키를 가진 아이콘 설정 객체 */
 export const socialIcons = {
   homepage: {
@@ -55,20 +58,42 @@ export const getInstagramPostId = (url: string | null): string | null => {
 };
 
 // 배경 URL 가져오기 함수 추가
-export const getUrlByType = (urls: any[], type: string): string | null => {
+export const getUrlByType = (urls: any[], type: UrlType): string | null => {
   if (!urls || !Array.isArray(urls)) return null;
-  const url = urls.find((url) => url.type === type);
-  return url ? url.value : null;
+
+  try {
+    const url = urls.find((url) => {
+      if (!url || !url.type) return false;
+
+      const normalizedType = String(url.type).trim().toLowerCase();
+      const normalizedUrlType = String(type).trim().toLowerCase();
+
+      return normalizedType === normalizedUrlType;
+    });
+
+    return url?.value || null;
+  } catch (error) {
+    console.error("Error in getUrlByType:", error);
+    return null;
+  }
 };
 
 // 배경 타입 확인 함수
-export const getMediaType = (media: string | null): string => {
+export const getMediaType = (media: string | null | undefined): string => {
   if (!media) return "none";
-  if (media.endsWith(".mp4")) return "video";
-  if (media.includes("youtube.com") || media.includes("youtu.be"))
-    return "youtube";
-  if (media.includes("instagram.com")) return "instagram";
-  return "image";
+
+  try {
+    const mediaString = String(media);
+
+    if (mediaString.endsWith(".mp4")) return "video";
+    if (mediaString.includes("youtube.com") || mediaString.includes("youtu.be"))
+      return "youtube";
+    if (mediaString.includes("instagram.com")) return "instagram";
+    return "image";
+  } catch (error) {
+    console.error("Error in getMediaType:", error);
+    return "none";
+  }
 };
 
 // 배경 스타일 계산 함수

@@ -74,7 +74,9 @@ const handleClubSelect = (clubId) => {
     <UNotifications />
     <UHeader :links="links">
       <template #logo>
-        <NuxtLink to="/" class="text-lg font-bold">Zouk Korea</NuxtLink>
+        <ClientOnly>
+          <NuxtLink to="/" class="text-lg font-bold"> Zouk Korea </NuxtLink>
+        </ClientOnly>
       </template>
 
       <template #right>

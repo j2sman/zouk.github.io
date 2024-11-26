@@ -20,17 +20,19 @@
     </div>
 
     <!-- 구글 캘린더 임베드 -->
-    <div
-      class="calendar-container bg-white/5 dark:bg-gray-900/20 rounded-xl p-4"
-    >
-      <iframe
-        :src="calendarUrl"
-        style="border: 0"
-        class="w-full h-[80vh] bg-transparent"
-        frameborder="0"
-        scrolling="no"
-      ></iframe>
-    </div>
+    <ClientOnly>
+      <div
+        class="calendar-container bg-white/5 dark:bg-gray-900/20 rounded-xl p-4"
+      >
+        <iframe
+          :src="calendarUrl"
+          style="border: 0"
+          class="w-full h-[80vh] bg-transparent"
+          frameborder="0"
+          scrolling="no"
+        ></iframe>
+      </div>
+    </ClientOnly>
   </div>
 </template>
 
@@ -46,7 +48,14 @@ const calendarUrl = computed(() => {
   const calendarsParam = calendarIds
     .map((id) => `src=${encodeURIComponent(id)}`)
     .join("&");
-  const themeValue = colorMode.value === "dark" ? "1" : "0";
+
+  // clientOnly 컴포넌트로 감싸거나, 클라이언트 사이드에서만 테마 값을 사용
+  const themeValue = import.meta.client
+    ? colorMode.value === "dark"
+      ? "1"
+      : "0"
+    : "0";
+
   return `https://calendar.google.com/calendar/embed?${calendarsParam}&ctz=Asia%2FSeoul&mode=MONTH&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=1&showTz=0&hl=${locale.value}&wkst=1&bgcolor=%23ffffff&themeId=${themeValue}`;
 });
 

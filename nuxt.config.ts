@@ -60,10 +60,16 @@ export default defineNuxtConfig({
   },
   nitro: {
     routeRules: {
-      '/**': {
+      "/**": {
         headers: {
-          'Content-Security-Policy': "frame-ancestors 'self' https://calendar.google.com/",
+          "Content-Security-Policy":
+            "frame-ancestors 'self' https://calendar.google.com/ https://www.instagram.com/",
+          "Access-Control-Allow-Origin": "https://www.instagram.com",
         },
+      },
+      "/api/**": {
+        cors: true,
+        proxy: { fetch: { credentials: "include" } },
       },
     },
   },
