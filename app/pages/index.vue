@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+import { getYoutubeVideoId } from "~/utils/media";
 const { t, locale } = useI18n();
 const colorMode = useColorMode();
 
@@ -61,23 +62,6 @@ const calendarUrl = computed(() => {
 
 // 배경 비디오 URL
 const backgroundVideo = "https://www.youtube.com/watch?v=JawTJWFum64";
-
-// YouTube 비디오 ID 추출 함수
-const getYoutubeVideoId = (url) => {
-  if (!url) return null;
-
-  // YouTube Shorts URL 처리
-  if (url.includes("youtube.com/shorts/")) {
-    const shortsMatch = url.match(/youtube\.com\/shorts\/([^/?#&]+)/);
-    return shortsMatch ? shortsMatch[1] : null;
-  }
-
-  // 일반적인 YouTube URL 처리
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-
-  return match && match[2].length === 11 ? match[2] : null;
-};
 
 // YouTube 비디오 여부 확인
 const isYoutubeVideo = computed(() => {
@@ -163,7 +147,7 @@ useHead({
 
 /* 구글 캘린더 iframe 투명도 조정을 위한 새로운 스타일 */
 .calendar-container iframe {
-  opacity: 0.5; /* 50% 불투명도로 변경 */
+  opacity: 0.8; /* 50% 불투명도로 변경 */
   transition: opacity 0.3s ease;
 }
 

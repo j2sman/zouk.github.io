@@ -4,6 +4,9 @@
     "description": "Zouk Korea is a Latin dance club and academy centered around Zouk lovers.",
     "copyright": "Copyright © {year} Zouk Korea"
   },
+  "common": {
+    "qna": "QnA"
+  },
   "nav": {
     "schedule": "Schedule",
     "clubInfo": "Club Info"
@@ -26,6 +29,7 @@
   },
   "clubs": {
     "select": "Select Club",
-    "title": "Club Info"
+    "title": "Club Info",
+    "qna": "QnA About Adding Club"
   }
 }

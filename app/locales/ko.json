@@ -4,6 +4,9 @@
     "description": "Zouk Korea는 Zouk를 사랑하는 사람 중심으로 구성된 라틴댄스 동호회입니다.",
     "copyright": "Copyright © {year} Zouk Korea"
   },
+  "common": {
+    "qna": "문의하기"
+  },
   "nav": {
     "schedule": "일정",
     "clubInfo": "동호회 소개"
@@ -26,6 +29,7 @@
   },
   "clubs": {
     "select": "동호회 선택",
-    "title": "동호회 소개"
+    "title": "동호회 소개",
+    "qna": "동호회 추가 관련 문의"
   }
 }

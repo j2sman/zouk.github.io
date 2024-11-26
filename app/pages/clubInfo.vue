@@ -19,6 +19,9 @@ const iframeRefs = ref({});
 // 비디오 투명도 관리를 위한 ref 추가(0 ~ 100. 100 == 불투명)
 const videoOpacity = ref(40);
 
+// 문의 URL
+const qnaUrl = ref("https://open.kakao.com/o/sDKuRzAg");
+
 // 컴포넌트 마운트 시 클럽 데이터 가져오기
 onBeforeMount(() => {
   clubStore.fetchClubs();
@@ -138,7 +141,18 @@ onMounted(() => {
 
 <template>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-4xl font-bold mb-8">{{ $t("clubs.title") }}</h1>
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-4xl font-bold">{{ $t("clubs.title") }}</h1>
+      <UButton
+        icon="i-ri-kakao-talk-fill"
+        color="yellow"
+        :to="qnaUrl"
+        target="_blank"
+        size="lg"
+      >
+        {{ $t("clubs.qna") }}
+      </UButton>
+    </div>
 
     <ClientOnly>
       <div
@@ -171,8 +185,8 @@ onMounted(() => {
               "
               :ref="(el) => (videoRefs[club.id] = el)"
               :data-club-id="club.id"
-              class="absolute inset-0 w-full h-full object-fill -z-10"
-              :class="`opacity-${videoOpacity}`"
+              class="video-background"
+              :style="`opacity: ${videoOpacity}%`"
               muted
               loop
               playsinline
@@ -193,8 +207,8 @@ onMounted(() => {
               :ref="(el) => (iframeRefs[club.id] = el)"
               :data-club-id="club.id"
               :src="getEmbedUrl(getUrlByType(club.urls, UrlType.background))"
-              class="absolute inset-0 w-full h-full -z-10 object-cover"
-              :class="`opacity-${videoOpacity}`"
+              class="video-background"
+              :style="`opacity: ${videoOpacity}%`"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen
@@ -224,4 +238,35 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.video-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.video-background::after {
+  position: absolute;
+  content: "";
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.video-background video,
+.video-background iframe {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  top: 0;
+  left: 0;
+  transform: none;
+}
+</style>
