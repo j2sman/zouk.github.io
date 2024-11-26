@@ -47,6 +47,13 @@ export default defineNuxtConfig({
       { code: "ko", name: "한국어", file: "ko.json" },
       { code: "en", name: "English", file: "en.json" },
     ],
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: "i18n_redirected",
+      redirectOn: "root", // URL이 '/'일 때만 리다이렉트
+      alwaysRedirect: true, // 항상 감지된 브라우저 언어로 리다이렉트
+      fallbackLocale: "ko", // 감지 실패시 기본 언어
+    },
     defaultLocale: "ko",
     skipSettingLocaleOnNavigate: true,
   },

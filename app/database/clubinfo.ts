@@ -41,6 +41,7 @@ export interface ClubInfo {
   id: string;
   default_language: SupportedLanguage;
   location: Location;
+  display_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -99,7 +100,7 @@ export class ClubInfoExtService {
           )
         `
         )
-        .order("created_at", { ascending: false });
+        .order("display_order", { ascending: true });
 
       if (clubsError) throw clubsError;
 
@@ -180,7 +181,7 @@ export class ClubInfoExtService {
           "id",
           matchingClubIds.map((item) => item.club_id)
         )
-        .order("created_at", { ascending: false });
+        .order("display_order", { ascending: true });
 
       if (clubsError) throw clubsError;
 
