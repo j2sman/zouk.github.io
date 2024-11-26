@@ -80,7 +80,7 @@ const youtubeEmbedUrl = computed(() => {
 });
 
 useHead({
-  title: `${t("schedule.title")} - LatinCielo`,
+  title: `${t("schedule.title")} - Zouk Korea`,
   meta: [
     {
       name: "description",
