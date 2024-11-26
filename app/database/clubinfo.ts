@@ -8,12 +8,23 @@ export enum SupportedLanguage {
 
 // 지원 언어 타입
 export enum UrlType {
-  homepage = "homepage",
-  youtube = "youtube",
-  instagram = "instagram",
-  facebook = "facebook",
-  kakaotalk = "kakaotalk",
-  background = "background",
+  homepage = "Homepage",
+  youtube = "Youtube",
+  instagram = "Instagram",
+  facebook = "Facebook",
+  kakaotalk = "Kakaotalk",
+  background = "Background",
+}
+
+// 지원 언어 타입
+export enum Location {
+  seoul = "Seoul",
+  gyeonggi = "Gyeonggi",
+  incheon = "Incheon",
+  gangwon = "Gangwon",
+  chungbuk = "Chungbuk",
+  chungnam = "Chungnam",
+  busan = "Busan",
 }
 
 export interface ClubUrl {
@@ -29,6 +40,7 @@ export interface ClubUrl {
 export interface ClubInfo {
   id: string;
   default_language: SupportedLanguage;
+  location: Location;
   created_at: string;
   updated_at: string;
 }
@@ -91,9 +103,9 @@ export class ClubInfoExtService {
 
       if (clubsError) throw clubsError;
 
-      if (process.env.NODE_ENV === "development") {
-        console.log(`clubsData:\n${JSON.stringify(clubsData)}`); // URL 데이터 로깅
-      }
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log(`clubsData:\n${JSON.stringify(clubsData)}`); // URL 데이터 로깅
+      // }
 
       // 데이터 구조 변환
       const formattedData = clubsData.map((club: any) => {
@@ -106,25 +118,14 @@ export class ClubInfoExtService {
           };
         });
 
-        const urls: ClubUrl[] = [];
-        (club.urls as ClubUrl[]).forEach((url) => {
-          urls.push({
-            id: url.id,
-            type: url.type,
-            value: url.value,
-            club_id: url.club_id,
-            created_at: url.created_at,
-            updated_at: url.updated_at,
-          });
-        });
-
         return {
           id: club.id,
           default_language: club.default_language,
           created_at: club.created_at,
           updated_at: club.updated_at,
+          location: club.location,
           translations,
-          urls: urls,
+          urls: club.urls,
         };
       });
 
@@ -199,6 +200,7 @@ export class ClubInfoExtService {
           default_language: club.default_language,
           created_at: club.created_at,
           updated_at: club.updated_at,
+          location: club.location,
           translations,
           urls: club.urls,
         };
