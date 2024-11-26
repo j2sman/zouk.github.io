@@ -1,5 +1,5 @@
 <script setup>
-import { ClubInfoWithTranslationsService } from "~/database/clubinfo";
+import { ClubInfoExtService } from "~/database/clubinfo";
 import { useClubStore, useClubOptions } from "~/stores/club";
 const { clubOptions } = useClubOptions();
 
@@ -56,7 +56,7 @@ const onBeforeEnter = async () => {
 };
 
 // 컴포넌트 마운트 시 클럽 데이터 가져오기
-onMounted(() => {
+onBeforeMount(() => {
   clubStore.fetchClubs();
 });
 

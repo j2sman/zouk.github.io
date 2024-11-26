@@ -1,35 +1,40 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 
 // 지원 언어 타입
-export type SupportedLanguage = "ko" | "en";
+export enum SupportedLanguage {
+  ko = "ko",
+  en = "en",
+}
+
+// 지원 언어 타입
+export enum UrlType {
+  homepage = "homepage",
+  youtube = "youtube",
+  instagram = "instagram",
+  facebook = "facebook",
+  kakaotalk = "kakaotalk",
+  background = "background",
+}
+
+export interface ClubUrl {
+  id: string;
+  club_id: string;
+  type: UrlType;
+  value: string;
+  created_at: string;
+  updated_at: string;
+}
 
 // 기본 ClubInfo 타입
 export interface ClubInfo {
   id: string;
   default_language: SupportedLanguage;
-  url_homepage: string | null;
-  url_youtube: string | null;
-  url_instagram: string | null;
-  url_facebook: string | null;
-  id_kakaotalk: string | null;
-  url_background: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-// 다국어 정보 타입
-export interface ClubInfoTranslation {
-  id: string;
-  club_id: string;
-  language: SupportedLanguage;
-  club_name: string;
-  description: string;
   created_at: string;
   updated_at: string;
 }
 
 // 전체 다국어 정보를 포함한 ClubInfo 타입
-export interface ClubInfoWithTranslations extends ClubInfo {
+export interface ClubInfoExt extends ClubInfo {
   translations: {
     [key in SupportedLanguage]?: {
       club_name: string;
@@ -39,21 +44,21 @@ export interface ClubInfoWithTranslations extends ClubInfo {
 }
 
 // 응답 타입 정의
-export interface ClubInfoWithTranslationsResponse {
-  data: ClubInfoWithTranslations | null;
+export interface ClubInfoExtResponse {
+  data: ClubInfoExt | null;
   error: Error | null;
 }
 
-export interface ClubInfoWithTranslationsListResponse {
-  data: ClubInfoWithTranslations[];
+export interface ClubInfoExtListResponse {
+  data: ClubInfoExt[];
   error: Error | null;
 }
 
-export class ClubInfoWithTranslationsService {
+export class ClubInfoExtService {
   private readonly supabase: SupabaseClient;
-  // 테이블명은 기본적으로 소문자임
-  private readonly clubTableName = "ClubInfo".toLowerCase();
-  private readonly i18nTableName = "ClubInfoI18n".toLowerCase();
+  private readonly clubTableName = "clubinfo".toLowerCase();
+  private readonly i18nTableName = "clubinfoi18n".toLowerCase();
+  private readonly urlTableName = "cluburls".toLowerCase();
 
   constructor(supabase: SupabaseClient) {
     this.supabase = supabase;
@@ -62,50 +67,64 @@ export class ClubInfoWithTranslationsService {
   /**
    * 모든 클럽 정보와 해당하는 모든 번역을 조회
    */
-  async getAllClubsWithTranslations(): Promise<ClubInfoWithTranslationsListResponse> {
+  async getAllClubsWithTranslations(): Promise<ClubInfoExtListResponse> {
     try {
-      // 기본 클럽 정보와 번역 정보를 함께 조회
       const { data: clubsData, error: clubsError } = await this.supabase
         .from(this.clubTableName)
         .select(
           `
-            *,
-            translations:${this.i18nTableName} (
-              id,
-              language,
-              club_name,
-              description
-            )
-          `
+          *,
+          translations:${this.i18nTableName}!club_id(
+            id,
+            language,
+            club_name,
+            description
+          ),
+          urls:${this.urlTableName}!club_id(
+            id,
+            type,
+            value
+          )
+        `
         )
         .order("created_at", { ascending: false });
 
       if (clubsError) throw clubsError;
 
-      // 데이터 구조 변환
-      const formattedData = clubsData.map((club: ClubInfoWithTranslations) => {
-        const translations: ClubInfoWithTranslations["translations"] = {};
+      if (process.env.NODE_ENV === "development") {
+        console.log(`clubsData:\n${JSON.stringify(clubsData)}`); // URL 데이터 로깅
+      }
 
-        // translations 배열을 객체로 변환
-        (club.translations as ClubInfoTranslation[]).forEach((trans) => {
+      // 데이터 구조 변환
+      const formattedData = clubsData.map((club: any) => {
+        const translations: ClubInfoExt["translations"] = {};
+
+        (club.translations as ClubInfoExt[]).forEach((trans) => {
           translations[trans.language] = {
             club_name: trans.club_name,
             description: trans.description,
           };
         });
 
+        const urls: ClubUrl[] = [];
+        (club.urls as ClubUrl[]).forEach((url) => {
+          urls.push({
+            id: url.id,
+            type: url.type,
+            value: url.value,
+            club_id: url.club_id,
+            created_at: url.created_at,
+            updated_at: url.updated_at,
+          });
+        });
+
         return {
           id: club.id,
           default_language: club.default_language,
-          url_homepage: club.url_homepage,
-          url_youtube: club.url_youtube,
-          url_instagram: club.url_instagram,
-          url_facebook: club.url_facebook,
-          url_background: club.url_background,
-          id_kakaotalk: club.id_kakaotalk,
           created_at: club.created_at,
           updated_at: club.updated_at,
           translations,
+          urls: urls,
         };
       });
 
@@ -117,68 +136,11 @@ export class ClubInfoWithTranslationsService {
   }
 
   /**
-   * ID로 특정 클럽의 모든 번역 정보 조회
-   */
-  async getClubWithTranslationsById(
-    id: string
-  ): Promise<ClubInfoWithTranslationsResponse> {
-    try {
-      const { data, error } = await this.supabase
-        .from(this.clubTableName)
-        .select(
-          `
-            *,
-            translations:${this.i18nTableName} (
-              id,
-              language,
-              club_name,
-              description
-            )
-          `
-        )
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
-
-      // 데이터 구조 변환
-      const translations: ClubInfoWithTranslations["translations"] = {};
-
-      // translations 배열을 객체로 변환
-      (data.translations as ClubInfoTranslation[]).forEach((trans) => {
-        translations[trans.language] = {
-          club_name: trans.club_name,
-          description: trans.description,
-        };
-      });
-
-      const formattedData: ClubInfoWithTranslations = {
-        id: data.id,
-        default_language: data.default_language,
-        url_homepage: data.url_homepage,
-        url_youtube: data.url_youtube,
-        url_instagram: data.url_instagram,
-        url_facebook: data.url_facebook,
-        url_background: data.url_background,
-        id_kakaotalk: data.id_kakaotalk,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        translations,
-      };
-
-      return { data: formattedData, error: null };
-    } catch (error) {
-      console.error("Error fetching club with translations by ID:", error);
-      return { data: null, error: error as Error };
-    }
-  }
-
-  /**
    * 클럽명으로 검색 (모든 언어의 클럽명에서 검색)
    */
   async searchClubsWithTranslations(
     searchTerm: string
-  ): Promise<ClubInfoWithTranslationsListResponse> {
+  ): Promise<ClubInfoExtListResponse> {
     try {
       // 먼저 i18n 테이블에서 검색어와 매칭되는 club_id들을 찾음
       const { data: matchingClubIds, error: searchError } = await this.supabase
@@ -199,14 +161,19 @@ export class ClubInfoWithTranslationsService {
         .from(this.clubTableName)
         .select(
           `
-            *,
-            translations:${this.i18nTableName} (
-              id,
-              language,
-              club_name,
-              description
-            )
-          `
+          *,
+          translations:${this.i18nTableName}!club_id(
+            id,
+            language,
+            club_name,
+            description
+          ),
+          urls:${this.urlTableName}!club_id(
+            id,
+            type,
+            value
+          )
+        `
         )
         .in(
           "id",
@@ -218,9 +185,9 @@ export class ClubInfoWithTranslationsService {
 
       // 데이터 구조 변환
       const formattedData = clubsData.map((club) => {
-        const translations: ClubInfoWithTranslations["translations"] = {};
+        const translations: ClubInfoExt["translations"] = {};
 
-        (club.translations as ClubInfoTranslation[]).forEach((trans) => {
+        (club.translations as ClubInfoExt[]).forEach((trans) => {
           translations[trans.language] = {
             club_name: trans.club_name,
             description: trans.description,
@@ -230,15 +197,10 @@ export class ClubInfoWithTranslationsService {
         return {
           id: club.id,
           default_language: club.default_language,
-          url_homepage: club.url_homepage,
-          url_youtube: club.url_youtube,
-          url_instagram: club.url_instagram,
-          url_facebook: club.url_facebook,
-          url_background: club.url_background,
-          id_kakaotalk: club.id_kakaotalk,
           created_at: club.created_at,
           updated_at: club.updated_at,
           translations,
+          urls: club.urls,
         };
       });
 

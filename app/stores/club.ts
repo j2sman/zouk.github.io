@@ -1,31 +1,19 @@
 import { defineStore } from "pinia";
-import { ClubInfoWithTranslationsService } from "~/database/clubinfo";
-
-interface Club {
-  id: string;
-  name: string;
-  description: string;
-  background: string | null;
-  urls: {
-    homepage: string | null;
-    youtube: string | null;
-    instagram: string | null;
-    facebook: string | null;
-    kakaotalk: string | null;
-  };
-}
+import { ClubInfoExtService } from "~/database/clubinfo";
+import type { ClubInfoExt } from "~/database/clubinfo";
+import { useI18n } from "#imports";
 
 export const useClubStore = defineStore("club", {
   state: () => ({
     selectedClubId: null as string | null,
-    selectedClub: null as Club | null,
-    totalClubs: [] as Club[],
+    selectedClub: null as ClubInfoExt | null,
+    totalClubs: [] as ClubInfoExt[],
   }),
 
   actions: {
     async fetchClubs() {
       const supabase = useSupabaseClient();
-      const clubService = new ClubInfoWithTranslationsService(supabase);
+      const clubService = new ClubInfoExtService(supabase);
       const { locale } = useI18n();
 
       const { data: clubsData, error } =
@@ -36,19 +24,10 @@ export const useClubStore = defineStore("club", {
         return;
       }
 
-      this.totalClubs = clubsData.map((club) => ({
-        id: club.id,
-        name: club.translations[locale.value]?.club_name || "",
-        description: club.translations[locale.value]?.description || "",
-        background: club.url_background,
-        urls: {
-          homepage: club.url_homepage,
-          youtube: club.url_youtube,
-          instagram: club.url_instagram,
-          facebook: club.url_facebook,
-          kakaotalk: club.id_kakaotalk,
-        },
-      }));
+      this.totalClubs = clubsData;
+      if (process.env.NODE_ENV === "development") {
+        console.log(`this.totalClubs:\n${JSON.stringify(this.totalClubs)}`); // URL 데이터 로깅
+      }
     },
 
     setSelectedClub(clubId: string) {
@@ -59,12 +38,15 @@ export const useClubStore = defineStore("club", {
   },
 
   getters: {
-    // 기본 클럽 옵션만 반환
-    clubOptions: (state) =>
-      state.totalClubs.map((club) => ({
-        label: club.name,
+    clubOptions: (state) => {
+      const { locale } = useI18n();
+      return state.totalClubs.map((club) => ({
+        label:
+          club.translations[locale.value as keyof typeof club.translations]
+            ?.club_name || "",
         value: club.id,
-      })),
+      }));
+    },
   },
 });
 

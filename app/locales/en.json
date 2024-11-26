@@ -25,6 +25,7 @@
     }
   },
   "clubs": {
+    "select": "Select Club",
     "title": "Club Info"
   }
 }
