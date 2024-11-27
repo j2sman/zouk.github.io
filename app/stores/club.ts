@@ -25,7 +25,7 @@ export const useClubStore = defineStore("club", {
       }
 
       this.totalClubs = clubsData;
-      if (process.env.NODE_ENV === "development") {
+      if (import.meta.dev) {
         console.log(`this.totalClubs:\n${JSON.stringify(this.totalClubs)}`); // URL 데이터 로깅
       }
     },

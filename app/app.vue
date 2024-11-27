@@ -19,6 +19,17 @@ const links = computed(() => [
     label: t("nav.clubInfo"),
     to: locale.value === "ko" ? "/clubInfo" : `/${locale.value}/clubInfo`,
   },
+  ...(import.meta.dev
+    ? [
+        {
+          label: t("nav.clubInfomap"),
+          to:
+            locale.value === "ko"
+              ? "/clubInfomap"
+              : `/${locale.value}/clubInfomap`,
+        },
+      ]
+    : []),
 ]);
 
 const title = useI18n().t("app.title");
@@ -72,6 +83,7 @@ const handleClubSelect = (clubId) => {
 <template>
   <div class="min-h-screen flex flex-col">
     <UNotifications />
+    <NuxtLoadingIndicator />
     <UHeader :links="links">
       <template #logo>
         <ClientOnly>

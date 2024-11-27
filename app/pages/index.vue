@@ -37,47 +37,17 @@
 </template>
 
 <script setup>
-import { getYoutubeVideoId } from "~/utils/media";
+import { INDEX_BACKGROUND_VIDEO, CALENDAR_IDS } from "~/constants/commonvars";
+import { IS_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
+import { getEmbedUrl, getCalendarUrl } from "~/utils/media";
 const { t, locale } = useI18n();
 const colorMode = useColorMode();
 
-// 캘린더 ID 목록
-const calendarIds = ["zoukkorea@gmail.com", "carlesargen@gmail.com"];
+const backgroundVideo = ref(INDEX_BACKGROUND_VIDEO);
+const isYoutubeVideo = ref(IS_YOUTUBE_BACKGROUND_VIDEO);
+const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
 
-// iframe URL computed 속성
-const calendarUrl = computed(() => {
-  const calendarsParam = calendarIds
-    .map((id) => `src=${encodeURIComponent(id)}`)
-    .join("&");
-
-  // clientOnly 컴포넌트로 감싸거나, 클라이언트 사이드에서만 테마 값을 사용
-  const themeValue = import.meta.client
-    ? colorMode.value === "dark"
-      ? "1"
-      : "0"
-    : "0";
-
-  return `https://calendar.google.com/calendar/embed?${calendarsParam}&ctz=Asia%2FSeoul&mode=MONTH&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=1&showTz=0&hl=${locale.value}&wkst=1&bgcolor=%23ffffff&themeId=${themeValue}`;
-});
-
-// 배경 비디오 URL
-const backgroundVideo = "https://www.youtube.com/watch?v=JawTJWFum64";
-
-// YouTube 비디오 여부 확인
-const isYoutubeVideo = computed(() => {
-  return (
-    backgroundVideo.includes("youtube.com") ||
-    backgroundVideo.includes("youtu.be")
-  );
-});
-
-// YouTube 임베드 URL 생성
-const youtubeEmbedUrl = computed(() => {
-  const videoId = getYoutubeVideoId(backgroundVideo);
-  return videoId
-    ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`
-    : null;
-});
+const calendarUrl = getCalendarUrl(CALENDAR_IDS, colorMode, locale.value);
 
 useHead({
   title: `${t("schedule.title")} - Zouk Korea`,

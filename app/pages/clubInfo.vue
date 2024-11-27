@@ -1,12 +1,14 @@
 <script setup>
+import { SOCIAL_ICONS } from "~/constants/commonvars";
 import {
   getMediaType,
   getBackgroundConfig,
   getEmbedUrl,
   getUrlByType,
-  socialIcons,
 } from "~/utils/media";
 import { UrlType, Location } from "~/database/clubinfo";
+import { getSocialMediaLinks, getTranslatedText } from "~/utils/media";
+import { VIDEO_OPACITY, QNA_URL } from "~/constants/commonvars";
 
 const { t, locale } = useI18n();
 const clubStore = useClubStore();
@@ -15,12 +17,7 @@ const { $device } = useNuxtApp();
 // 비디오 재생 관리를 위한 ref 추가
 const videoRefs = ref({});
 const iframeRefs = ref({});
-
-// 비디오 투명도 관리를 위한 ref 추가(0 ~ 100. 100 == 불투명)
-const videoOpacity = ref(40);
-
-// 문의 URL
-const qnaUrl = ref("https://open.kakao.com/o/sDKuRzAg");
+const socialIcons = ref(SOCIAL_ICONS);
 
 // 컴포넌트 마운트 시 클럽 데이터 가져오기
 onBeforeMount(() => {
@@ -35,7 +32,7 @@ const clubsByLocation = computed(() => {
       const normalizedClubLocation = String(club.location).trim().toLowerCase();
       const normalizedLocation = String(location).trim().toLowerCase();
 
-      // if (process.env.NODE_ENV === "development") {
+      // if (import.meta.dev) {
       //   console.log(
       //     `Comparing - Club: "${normalizedClubLocation}", Location: "${normalizedLocation}"`
       //   );
@@ -45,49 +42,12 @@ const clubsByLocation = computed(() => {
     });
   });
 
-  // if (process.env.NODE_ENV === "development") {
+  // if (import.meta.dev) {
   //   console.log("Grouped clubs:", grouped);
   // }
 
   return grouped;
 });
-
-// 소셜 미디어 링크 필터링 함수
-const getSocialMediaLinks = (urls) => {
-  if (!urls || !Array.isArray(urls)) return [];
-  return urls.filter((url) => {
-    const normalizedUrlType = String(url.type).trim().toLowerCase();
-    if (
-      normalizedUrlType === UrlType.background.toLowerCase() ||
-      normalizedUrlType === UrlType.homepage.toLowerCase()
-    )
-      return false;
-    if (normalizedUrlType === UrlType.kakaotalk.toLowerCase()) {
-      return (
-        url.value &&
-        (url.value.toString().startsWith("http") ||
-          ($device.isMobile.value.value && url.value.toString().length > 0))
-      );
-    }
-    return url.value && url.value.length > 0;
-  });
-};
-
-// 번역된 텍스트를 가져오는 함수
-const getTranslatedText = (club, field) => {
-  const currentTranslation = club.translations[locale.value]?.[field];
-  if (currentTranslation) return currentTranslation;
-
-  const defaultTranslation = club.translations[club.default_language]?.[field];
-  if (defaultTranslation) return defaultTranslation;
-
-  const firstAvailableTranslation = Object.values(club.translations)[0]?.[
-    field
-  ];
-  if (firstAvailableTranslation) return firstAvailableTranslation;
-
-  return "";
-};
 
 // Intersection Observer 설정
 onMounted(() => {
@@ -137,6 +97,22 @@ onMounted(() => {
     observer.disconnect();
   });
 });
+
+const clubMediaTypes = computed(() => {
+  const types = {};
+  clubStore.totalClubs.forEach((club) => {
+    try {
+      const backgroundUrl = getUrlByType(club.urls, UrlType.background);
+      types[club.id] = getMediaType(backgroundUrl);
+    } catch (error) {
+      console.error("클럽 미디어 타입 확인 중 오류:", error, {
+        clubId: club.id,
+      });
+      types[club.id] = "none";
+    }
+  });
+  return types;
+});
 </script>
 
 <template>
@@ -146,7 +122,7 @@ onMounted(() => {
       <UButton
         icon="i-ri-kakao-talk-fill"
         color="yellow"
-        :to="qnaUrl"
+        :to="QNA_URL"
         target="_blank"
         size="lg"
       >
@@ -179,14 +155,11 @@ onMounted(() => {
           >
             <!-- 로컬 비디오 -->
             <video
-              v-if="
-                getMediaType(getUrlByType(club.urls, UrlType.background)) ===
-                'video'
-              "
+              v-if="clubMediaTypes[club.id] === 'video'"
               :ref="(el) => (videoRefs[club.id] = el)"
               :data-club-id="club.id"
               class="video-background"
-              :style="`opacity: ${videoOpacity}%`"
+              :style="`opacity: ${VIDEO_OPACITY}%`"
               muted
               loop
               playsinline
@@ -199,16 +172,12 @@ onMounted(() => {
 
             <!-- YouTube/Instagram 임베드 -->
             <iframe
-              v-if="
-                ['youtube', 'instagram'].includes(
-                  getMediaType(getUrlByType(club.urls, UrlType.background))
-                )
-              "
+              v-if="['youtube', 'instagram'].includes(clubMediaTypes[club.id])"
               :ref="(el) => (iframeRefs[club.id] = el)"
               :data-club-id="club.id"
               :src="getEmbedUrl(getUrlByType(club.urls, UrlType.background))"
               class="video-background"
-              :style="`opacity: ${videoOpacity}%`"
+              :style="`opacity: ${VIDEO_OPACITY}%`"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen
@@ -222,7 +191,10 @@ onMounted(() => {
             </template>
             <template #links>
               <UButton
-                v-for="url in getSocialMediaLinks(club.urls)"
+                v-for="url in getSocialMediaLinks(
+                  club.urls,
+                  $device.isMobile.value.value
+                )"
                 :key="url.type"
                 :icon="socialIcons[url.type].icon"
                 :color="socialIcons[url.type].color"
