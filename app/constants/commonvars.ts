@@ -39,4 +39,16 @@ export const SOCIAL_ICONS = {
     icon: "i-heroicons-photo",
     color: "gray",
   },
+  naverband: {
+    icon: "i-simple-icons-nativescript",
+    color: "blue",
+  },
+  navercafe: {
+    icon: "i-simple-icons-naver",
+    color: "green",
+  },
+  daumcafe: {
+    icon: "i-simple-icons-kakao",
+    color: "orange",
+  },
 };

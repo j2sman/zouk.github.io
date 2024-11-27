@@ -419,7 +419,7 @@ const clubBackgroundMediaTypes = computed(() => {
                 <UButton
                   v-for="url in getSocialMediaLinks(
                     club.urls,
-                    $device.isMobile.value.value
+                    $device.isMobile
                   )"
                   :key="url.type"
                   :icon="socialIcons[url.type].icon"
@@ -427,7 +427,9 @@ const clubBackgroundMediaTypes = computed(() => {
                   :to="url.value"
                   target="_blank"
                   size="lg"
-                />
+                >
+                  {{ url.additional_info }}
+                </UButton>
               </template>
             </ULandingHero>
           </div>
@@ -444,7 +446,8 @@ const clubBackgroundMediaTypes = computed(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: 1;
+  pointer-events: none;
   overflow: hidden;
 }
 
@@ -455,8 +458,9 @@ const clubBackgroundMediaTypes = computed(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 1;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .video-background video,
@@ -500,17 +504,6 @@ svg {
   fill: #bbb;
 }
 
-/* 메시지 트랜지션 스타일 추가 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
 .region-label {
   user-select: none;
   font-weight: 600;
@@ -544,6 +537,17 @@ svg {
 /* 컨텐츠의 z-index 추가 */
 :deep(.landing-hero-content) {
   position: relative;
-  z-index: 2;
+  z-index: 3;
+  opacity: 1;
+}
+
+/* UButton이 클릭 가능하도록 z-index 추가 */
+:deep(.u-button) {
+  position: relative;
+  z-index: 4;
+  pointer-events: auto;
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 1);
+  backdrop-filter: blur(4px);
 }
 </style>

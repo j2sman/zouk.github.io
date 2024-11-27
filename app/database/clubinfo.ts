@@ -12,8 +12,11 @@ export enum UrlType {
   youtube = "Youtube",
   instagram = "Instagram",
   facebook = "Facebook",
-  kakaotalk = "Kakaotalk",
   background = "Background",
+  naverband = "Naverband",
+  navercafe = "Navercafe",
+  daumcafe = "Daumcafe",
+  kakaotalk = "Kakaotalk",
 }
 
 // 지원 언어 타입
@@ -42,6 +45,7 @@ export interface ClubUrl {
   club_id: string;
   type: UrlType;
   value: string;
+  additional_info: string;
   created_at: string;
   updated_at: string;
 }
@@ -106,7 +110,8 @@ export class ClubInfoExtService {
           urls:${this.urlTableName}!club_id(
             id,
             type,
-            value
+            value,
+            additional_info
           )
         `
         )
