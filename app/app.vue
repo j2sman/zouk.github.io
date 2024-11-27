@@ -1,6 +1,6 @@
 <script setup>
 import { ClubInfoExtService } from "~/database/clubinfo";
-import { useClubStore, useClubOptions } from "~/stores/club";
+import { useClubStore, useClubOptions } from "~/stores/clubstore";
 const { clubOptions } = useClubOptions();
 
 const { t, locale, locales, setLocale, finalizePendingLocaleChange } =

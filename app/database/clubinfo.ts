@@ -25,6 +25,16 @@ export enum Location {
   chungbuk = "Chungbuk",
   chungnam = "Chungnam",
   busan = "Busan",
+  daegu = "Daegu",
+  gwangju = "Gwangju",
+  daejeon = "Daejeon",
+  ulsan = "Ulsan",
+  sejong = "Sejong",
+  jeonbuk = "Jeonbuk",
+  jeonnam = "Jeonnam",
+  gyeongbuk = "Gyeongbuk",
+  gyeongnam = "Gyeongnam",
+  jeju = "Jeju",
 }
 
 export interface ClubUrl {

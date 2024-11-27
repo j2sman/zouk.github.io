@@ -47,6 +47,28 @@ export const useClubStore = defineStore("club", {
         value: club.id,
       }));
     },
+
+    hasClubsInLocation: (state) => {
+      return (location: string) => {
+        if (!location) return false;
+
+        return state.totalClubs.some((club) => {
+          const normalizedClubLocation = String(club.location)
+            .trim()
+            .toLowerCase();
+          const normalizedLocation = String(location).trim().toLowerCase();
+
+          // if (import.meta.dev) {
+          //   console.log("Comparing locations:", {
+          //     clubLocation: normalizedClubLocation,
+          //     searchLocation: normalizedLocation,
+          //   });
+          // }
+
+          return normalizedClubLocation === normalizedLocation;
+        });
+      };
+    },
   },
 });
 
