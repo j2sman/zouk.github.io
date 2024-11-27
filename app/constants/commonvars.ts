@@ -1,3 +1,6 @@
+export const MAP_FILE_PATH_COMPRESSED = "/korea.lz4.txt";
+export const MAP_FILE_PATH_DECOMPRESSED = "/korea.json";
+
 // 문의 URL
 export const QNA_URL = "https://open.kakao.com/o/sDKuRzAg";
 
@@ -7,14 +10,6 @@ export const VIDEO_OPACITY = 40;
 // 배경 비디오 URL
 export const INDEX_BACKGROUND_VIDEO =
   "https://www.youtube.com/watch?v=JawTJWFum64";
-
-// YouTube 비디오 여부 확인
-export const IS_YOUTUBE_BACKGROUND_VIDEO = computed(() => {
-  return (
-    INDEX_BACKGROUND_VIDEO.includes("youtube.com") ||
-    INDEX_BACKGROUND_VIDEO.includes("youtu.be")
-  );
-});
 
 // 캘린더 ID 목록
 export const CALENDAR_IDS = ["zoukkorea@gmail.com"];

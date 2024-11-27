@@ -37,11 +37,8 @@
 </template>
 
 <script setup>
-import {
-  INDEX_BACKGROUND_VIDEO,
-  IS_YOUTUBE_BACKGROUND_VIDEO,
-  CALENDAR_IDS,
-} from "~/constants/commonvars";
+import { INDEX_BACKGROUND_VIDEO, CALENDAR_IDS } from "~/constants/commonvars";
+import { IS_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
 import { getEmbedUrl, getCalendarUrl } from "~/utils/media";
 const { t, locale } = useI18n();
 const colorMode = useColorMode();

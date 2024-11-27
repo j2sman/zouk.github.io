@@ -32,7 +32,7 @@ const clubsByLocation = computed(() => {
       const normalizedClubLocation = String(club.location).trim().toLowerCase();
       const normalizedLocation = String(location).trim().toLowerCase();
 
-      // if (process.env.NODE_ENV === "development") {
+      // if (import.meta.dev) {
       //   console.log(
       //     `Comparing - Club: "${normalizedClubLocation}", Location: "${normalizedLocation}"`
       //   );
@@ -42,7 +42,7 @@ const clubsByLocation = computed(() => {
     });
   });
 
-  // if (process.env.NODE_ENV === "development") {
+  // if (import.meta.dev) {
   //   console.log("Grouped clubs:", grouped);
   // }
 

@@ -104,7 +104,7 @@ export class ClubInfoExtService {
 
       if (clubsError) throw clubsError;
 
-      // if (process.env.NODE_ENV === "development") {
+      // if (import.meta.dev) {
       //   console.log(`clubsData:\n${JSON.stringify(clubsData)}`); // URL 데이터 로깅
       // }
 

@@ -2,6 +2,7 @@
 import { Location } from "~/database/clubinfo";
 import * as d3 from "d3";
 import { VIDEO_OPACITY, QNA_URL } from "~/constants/commonvars";
+import { loadKoreaMap } from "~/utils/map";
 
 const { t, locale } = useI18n();
 const clubStore = useClubStore();
@@ -28,7 +29,7 @@ const clubsByLocation = computed(() => {
       const normalizedClubLocation = String(club.location).trim().toLowerCase();
       const normalizedLocation = String(location).trim().toLowerCase();
 
-      // if (process.env.NODE_ENV === "development") {
+      // if (import.meta.dev) {
       //   console.log(
       //     `Comparing - Club: "${normalizedClubLocation}", Location: "${normalizedLocation}"`
       //   );
@@ -38,7 +39,7 @@ const clubsByLocation = computed(() => {
     });
   });
 
-  // if (process.env.NODE_ENV === "development") {
+  // if (import.meta.dev) {
   //   console.log("Grouped clubs:", grouped);
   // }
 
@@ -58,31 +59,35 @@ const initMap = async () => {
     .attr("height", containerHeight)
     .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`);
 
-  // GeoJSON 데이터 로드
-  const koreaMap = await fetch("/korea.json").then((res) => res.json());
+  try {
+    // 압축된 GeoJSON 데이터 로드
+    const koreaMap = await loadKoreaMap();
 
-  // 지도 프로젝션 설정 - 크기에 맞게 조정
-  const projection = d3
-    .geoMercator()
-    .center([127.5, 36])
-    .scale(containerWidth * 5) // 컨테이너 크기에 비례하여 스케일 조정
-    .translate([containerWidth / 2, containerHeight / 2]);
+    // 지도 프로젝션 설정 - 크기에 맞게 조정
+    const projection = d3
+      .geoMercator()
+      .center([127.5, 36])
+      .scale(containerWidth * 5) // 컨테이너 크기에 비례하여 스케일 조정
+      .translate([containerWidth / 2, containerHeight / 2]);
 
-  const path = d3.geoPath().projection(projection);
+    const path = d3.geoPath().projection(projection);
 
-  // 지도 그리기
-  svg
-    .selectAll("path")
-    .data(koreaMap.features)
-    .enter()
-    .append("path")
-    .attr("d", path)
-    .attr("class", "region")
-    .attr("fill", "#e4e4e4")
-    .attr("stroke", "#fff")
-    .on("click", (event, d) => {
-      selectedRegion.value = d.properties.name;
-    });
+    // 지도 그리기
+    svg
+      .selectAll("path")
+      .data(koreaMap.features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("class", "region")
+      .attr("fill", "#e4e4e4")
+      .attr("stroke", "#fff")
+      .on("click", (event, d) => {
+        selectedRegion.value = d.properties.name;
+      });
+  } catch (error) {
+    console.error("지도 데이터 로드 실패:", error);
+  }
 };
 
 // 컴포넌트 마운트 시 지도 초기화

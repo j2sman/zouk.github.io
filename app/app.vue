@@ -19,10 +19,17 @@ const links = computed(() => [
     label: t("nav.clubInfo"),
     to: locale.value === "ko" ? "/clubInfo" : `/${locale.value}/clubInfo`,
   },
-  {
-    label: t("nav.clubInfomap"),
-    to: locale.value === "ko" ? "/clubInfomap" : `/${locale.value}/clubInfomap`,
-  },
+  ...(import.meta.dev
+    ? [
+        {
+          label: t("nav.clubInfomap"),
+          to:
+            locale.value === "ko"
+              ? "/clubInfomap"
+              : `/${locale.value}/clubInfomap`,
+        },
+      ]
+    : []),
 ]);
 
 const title = useI18n().t("app.title");
