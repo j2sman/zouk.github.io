@@ -3,6 +3,15 @@ import { Location } from "~/database/clubinfo";
 import * as d3 from "d3";
 import { VIDEO_OPACITY, QNA_URL } from "~/constants/commonvars";
 import { loadKoreaMap } from "~/utils/map";
+import {
+  getMediaType,
+  getBackgroundConfig,
+  getEmbedUrl,
+  getUrlByType,
+} from "~/utils/media";
+import { UrlType } from "~/database/clubinfo";
+import { getSocialMediaLinks, getTranslatedText } from "~/utils/media";
+import { SOCIAL_ICONS } from "~/constants/commonvars";
 
 const { t, locale } = useI18n();
 const clubStore = useClubStore();
@@ -15,7 +24,9 @@ const iframeRefs = ref({});
 // 지도 관련 상태 추가
 const selectedRegion = ref(null);
 const mapContainer = ref(null);
-const showMessage = ref(false); // 메시지 표시 상태 추가
+
+// 클럽 목록 표시 상태 추가
+const showClubList = ref(false);
 
 // 컴포넌트 마운트 시 클럽 데이터 가져오기
 onBeforeMount(() => {
@@ -47,10 +58,20 @@ const clubsByLocation = computed(() => {
   return grouped;
 });
 
-// 지역 선택 메시지 계산
-const regionMessage = computed(() => {
-  if (!selectedRegion.value) return "";
-  return `${selectedRegion.value} 지역이 선택되었습니다`;
+// 필터링된 클럽 목록
+const filteredClubs = computed(() => {
+  if (!selectedRegion.value) return clubsByLocation;
+  const locationKey = Object.entries(locationMapping).find(
+    ([_, value]) => value === selectedRegion.value
+  )?.[0];
+  // if (import.meta.dev) {
+  //   console.log(
+  //     `locationKey : ${locationKey}, clubs : ${JSON.stringify(
+  //       clubsByLocation.value[locationKey]
+  //     )}`
+  //   );
+  // }
+  return clubsByLocation.value[locationKey] || [];
 });
 
 // 지도 초기화 함수
@@ -106,17 +127,12 @@ const initMap = async () => {
       })
       .attr("stroke", "#fff")
       .on("click", (event, d) => {
-        // clubsByLocation에 있는 지역만 클릭 가능
         const locationKey = Object.entries(locationMapping).find(
           ([_, value]) => value === d.properties.name
         )?.[0];
         const hasClubs = clubStore.hasClubsInLocation(locationKey);
         if (hasClubs) {
-          selectedRegion.value = d.properties.name;
-          showMessage.value = true;
-          setTimeout(() => {
-            showMessage.value = false;
-          }, 3000);
+          handleRegionClick(d.properties.name);
         }
       });
 
@@ -166,18 +182,14 @@ const initMap = async () => {
       .style("cursor", "pointer")
       .attr("pointer-events", "all")
       .on("click", (event, d) => {
-        selectedRegion.value = d.properties.name;
-        showMessage.value = true;
-        setTimeout(() => {
-          showMessage.value = false;
-        }, 3000);
+        handleRegionClick(d.properties.name);
       });
   } catch (error) {
     console.error("지도 데이터 로드 실패:", error);
   }
 };
 
-// 컴포넌트 마운트 시 지도 초기화
+// 컴포넌트 마운트 시 지 초기화
 onMounted(() => {
   initMap();
   // ... existing onMounted code ...
@@ -194,14 +206,6 @@ onMounted(() => {
   onUnmounted(() => {
     window.removeEventListener("resize", handleResize);
   });
-});
-
-// 필터링된 클럽 목록
-const filteredClubs = computed(() => {
-  if (!selectedRegion.value) return clubsByLocation;
-  return {
-    [selectedRegion.value]: clubsByLocation[selectedRegion.value] || [],
-  };
 });
 
 // Intersection Observer 설정
@@ -292,6 +296,32 @@ const labelOffsets = {
   [Location.gyeongnam]: [0, 15],
   [Location.jeju]: [0, 10],
 };
+
+// 지도 클릭 핸들러 수정
+const handleRegionClick = (regionName) => {
+  selectedRegion.value = regionName;
+  showClubList.value = true; // 클럽 목록 표시
+};
+
+// Add socialIcons ref
+const socialIcons = ref(SOCIAL_ICONS);
+
+// Add clubMediaTypes computed property from clubInfo.vue
+const clubBackgroundMediaTypes = computed(() => {
+  const types = {};
+  clubStore.totalClubs.forEach((club) => {
+    try {
+      const backgroundUrl = getUrlByType(club.urls, UrlType.background);
+      types[club.id] = getMediaType(backgroundUrl);
+    } catch (error) {
+      console.error("클럽 미디어 타입 확인 중 오류:", error, {
+        clubId: club.id,
+      });
+      types[club.id] = "none";
+    }
+  });
+  return types;
+});
 </script>
 
 <template>
@@ -311,19 +341,99 @@ const labelOffsets = {
 
     <!-- 지도 컨테이너 위에 메시지 추가 -->
     <div class="relative">
-      <Transition name="fade">
-        <div
-          v-if="showMessage && regionMessage"
-          class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg"
-        >
-          {{ regionMessage }}
-        </div>
-      </Transition>
       <div
         ref="mapContainer"
         class="w-full border rounded-lg overflow-hidden"
       ></div>
     </div>
+
+    <!-- 클럽 목록 모달 -->
+    <ClientOnly>
+      <UModal v-model="showClubList">
+        <UCard>
+          <template #header>
+            <div class="flex justify-between items-center">
+              <h2 class="text-2xl font-semibold">{{ selectedRegion }}</h2>
+              <UButton
+                icon="i-heroicons-x-mark"
+                color="gray"
+                variant="ghost"
+                @click="showClubList = false"
+              />
+            </div>
+          </template>
+
+          <div class="club-list-container">
+            <ULandingHero
+              v-for="club in filteredClubs"
+              :key="club.id"
+              size="sm"
+              class="club-item mb-4"
+              :ui="{
+                background: getBackgroundConfig(
+                  getUrlByType(club.urls, UrlType.background)
+                ),
+              }"
+            >
+              <!-- video background -->
+              <video
+                v-if="clubBackgroundMediaTypes[club.id] === 'video'"
+                :ref="(el) => (videoRefs[club.id] = el)"
+                :data-club-id="club.id"
+                class="video-background"
+                :style="`opacity: ${VIDEO_OPACITY}%`"
+                muted
+                loop
+                playsinline
+              >
+                <source
+                  :src="getUrlByType(club.urls, UrlType.background)"
+                  type="video/mp4"
+                />
+              </video>
+
+              <!-- iframe background -->
+              <iframe
+                v-if="
+                  ['youtube', 'instagram'].includes(
+                    clubBackgroundMediaTypes[club.id]
+                  )
+                "
+                :ref="(el) => (iframeRefs[club.id] = el)"
+                :data-club-id="club.id"
+                :src="getEmbedUrl(getUrlByType(club.urls, UrlType.background))"
+                class="video-background"
+                :style="`opacity: ${VIDEO_OPACITY}%`"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              />
+
+              <template #title>
+                {{ getTranslatedText(club, "club_name") }}
+              </template>
+              <template #description>
+                {{ getTranslatedText(club, "description") }}
+              </template>
+              <template #links>
+                <UButton
+                  v-for="url in getSocialMediaLinks(
+                    club.urls,
+                    $device.isMobile.value.value
+                  )"
+                  :key="url.type"
+                  :icon="socialIcons[url.type].icon"
+                  :color="socialIcons[url.type].color"
+                  :to="url.value"
+                  target="_blank"
+                  size="lg"
+                />
+              </template>
+            </ULandingHero>
+          </div>
+        </UCard>
+      </UModal>
+    </ClientOnly>
   </div>
 </template>
 
@@ -334,18 +444,19 @@ const labelOffsets = {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: 0;
   overflow: hidden;
 }
 
 .video-background::after {
-  position: absolute;
   content: "";
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.6);
+  z-index: 1;
 }
 
 .video-background video,
@@ -357,6 +468,7 @@ const labelOffsets = {
   top: 0;
   left: 0;
   transform: none;
+  z-index: 0;
 }
 
 /* 지도 컨테이너 스타일 추가 */
@@ -405,5 +517,33 @@ svg {
   text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
     1px 1px 0 #fff;
   cursor: pointer;
+}
+
+:deep(.modal-container) {
+  max-width: 90vw;
+  width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+:deep(.modal-card) {
+  max-height: 100%;
+}
+
+.club-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.club-item {
+  width: 100%;
+}
+
+/* 컨텐츠의 z-index 추가 */
+:deep(.landing-hero-content) {
+  position: relative;
+  z-index: 2;
 }
 </style>

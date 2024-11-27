@@ -98,7 +98,7 @@ onMounted(() => {
   });
 });
 
-const clubMediaTypes = computed(() => {
+const clubBackgroundMediaTypes = computed(() => {
   const types = {};
   clubStore.totalClubs.forEach((club) => {
     try {
@@ -155,7 +155,7 @@ const clubMediaTypes = computed(() => {
           >
             <!-- 로컬 비디오 -->
             <video
-              v-if="clubMediaTypes[club.id] === 'video'"
+              v-if="clubBackgroundMediaTypes[club.id] === 'video'"
               :ref="(el) => (videoRefs[club.id] = el)"
               :data-club-id="club.id"
               class="video-background"
@@ -172,7 +172,11 @@ const clubMediaTypes = computed(() => {
 
             <!-- YouTube/Instagram 임베드 -->
             <iframe
-              v-if="['youtube', 'instagram'].includes(clubMediaTypes[club.id])"
+              v-if="
+                ['youtube', 'instagram'].includes(
+                  clubBackgroundMediaTypes[club.id]
+                )
+              "
               :ref="(el) => (iframeRefs[club.id] = el)"
               :data-club-id="club.id"
               :src="getEmbedUrl(getUrlByType(club.urls, UrlType.background))"
