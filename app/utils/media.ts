@@ -153,22 +153,35 @@ export const getEmbedUrl = (background: string | null): string | null => {
 // 소셜 미디어 링크 필터링 함수
 export const getSocialMediaLinks = (urls: any[], isMobile: boolean) => {
   if (!urls || !Array.isArray(urls)) return [];
-  return urls.filter((url) => {
-    const normalizedUrlType = String(url.type).trim().toLowerCase();
-    if (
-      normalizedUrlType === UrlType.background.toLowerCase() ||
-      normalizedUrlType === UrlType.homepage.toLowerCase()
-    )
-      return false;
-    if (normalizedUrlType === UrlType.kakaotalk.toLowerCase()) {
-      return (
-        url.value &&
-        (url.value.toString().startsWith("http") ||
-          (isMobile && url.value.toString().length > 0))
-      );
-    }
-    return url.value && url.value.length > 0;
-  });
+
+  // UrlType enum의 값들을 배열로 변환하여 순서 맵 생성
+  const urlTypeOrder = Object.values(UrlType).reduce((acc, type, index) => {
+    acc[type.toLowerCase()] = index;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return urls
+    .filter((url) => {
+      const normalizedUrlType = String(url.type).trim().toLowerCase();
+      if (
+        normalizedUrlType === UrlType.background.toLowerCase() ||
+        normalizedUrlType === UrlType.homepage.toLowerCase()
+      )
+        return false;
+      if (normalizedUrlType === UrlType.kakaotalk.toLowerCase()) {
+        return (
+          url.value &&
+          (url.value.toString().startsWith("http") ||
+            (isMobile && url.value.toString().length > 0))
+        );
+      }
+      return url.value && url.value.length > 0;
+    })
+    .sort((a, b) => {
+      const typeA = String(a.type).trim().toLowerCase();
+      const typeB = String(b.type).trim().toLowerCase();
+      return (urlTypeOrder[typeA] || 999) - (urlTypeOrder[typeB] || 999);
+    });
 };
 
 // 번역된 텍스트를 가져오는 함수

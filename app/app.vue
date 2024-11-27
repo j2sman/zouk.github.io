@@ -1,6 +1,6 @@
 <script setup>
 import { ClubInfoExtService } from "~/database/clubinfo";
-import { useClubStore, useClubOptions } from "~/stores/club";
+import { useClubStore, useClubOptions } from "~/stores/clubstore";
 const { clubOptions } = useClubOptions();
 
 const { t, locale, locales, setLocale, finalizePendingLocaleChange } =
@@ -16,20 +16,17 @@ const links = computed(() => [
     to: locale.value === "ko" ? "/" : `/${locale.value}`,
   },
   {
-    label: t("nav.clubInfo"),
-    to: locale.value === "ko" ? "/clubInfo" : `/${locale.value}/clubInfo`,
+    label: t("nav.clubInfomap"),
+    to: locale.value === "ko" ? "/clubInfomap" : `/${locale.value}/clubInfomap`,
   },
-  ...(import.meta.dev
-    ? [
-        {
-          label: t("nav.clubInfomap"),
-          to:
-            locale.value === "ko"
-              ? "/clubInfomap"
-              : `/${locale.value}/clubInfomap`,
-        },
-      ]
-    : []),
+  // ...(import.meta.dev
+  //   ? [
+  //       {
+  //         label: t("nav.clubInfo"),
+  //         to: locale.value === "ko" ? "/clubInfo" : `/${locale.value}/clubInfo`,
+  //       },
+  //     ]
+  //   : []),
 ]);
 
 const title = useI18n().t("app.title");
