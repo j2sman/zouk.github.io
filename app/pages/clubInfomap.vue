@@ -1,13 +1,6 @@
 <script setup>
-import { SOCIAL_ICONS } from "~/constants/commonvars";
-import {
-  getMediaType,
-  getBackgroundConfig,
-  getEmbedUrl,
-  getUrlByType,
-} from "~/utils/media";
-import { UrlType, Location } from "~/database/clubinfo";
-import { getSocialMediaLinks, getTranslatedText } from "~/utils/media";
+import { Location } from "~/database/clubinfo";
+import * as d3 from "d3";
 import { VIDEO_OPACITY, QNA_URL } from "~/constants/commonvars";
 
 const { t, locale } = useI18n();
@@ -17,7 +10,10 @@ const { $device } = useNuxtApp();
 // 비디오 재생 관리를 위한 ref 추가
 const videoRefs = ref({});
 const iframeRefs = ref({});
-const socialIcons = ref(SOCIAL_ICONS);
+
+// 지도 관련 상태 추가
+const selectedRegion = ref(null);
+const mapContainer = ref(null);
 
 // 컴포넌트 마운트 시 클럽 데이터 가져오기
 onBeforeMount(() => {
@@ -47,6 +43,73 @@ const clubsByLocation = computed(() => {
   // }
 
   return grouped;
+});
+
+// 지도 초기화 함수
+const initMap = async () => {
+  // 컨테이너의 실제 크기를 가져옵니다
+  const containerWidth = mapContainer.value.clientWidth;
+  const containerHeight = window.innerHeight * 0.7; // 화면 높이의 70% 사용
+
+  const svg = d3
+    .select(mapContainer.value)
+    .append("svg")
+    .attr("width", "100%")
+    .attr("height", containerHeight)
+    .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`);
+
+  // GeoJSON 데이터 로드
+  const koreaMap = await fetch("/korea.json").then((res) => res.json());
+
+  // 지도 프로젝션 설정 - 크기에 맞게 조정
+  const projection = d3
+    .geoMercator()
+    .center([127.5, 36])
+    .scale(containerWidth * 5) // 컨테이너 크기에 비례하여 스케일 조정
+    .translate([containerWidth / 2, containerHeight / 2]);
+
+  const path = d3.geoPath().projection(projection);
+
+  // 지도 그리기
+  svg
+    .selectAll("path")
+    .data(koreaMap.features)
+    .enter()
+    .append("path")
+    .attr("d", path)
+    .attr("class", "region")
+    .attr("fill", "#e4e4e4")
+    .attr("stroke", "#fff")
+    .on("click", (event, d) => {
+      selectedRegion.value = d.properties.name;
+    });
+};
+
+// 컴포넌트 마운트 시 지도 초기화
+onMounted(() => {
+  initMap();
+  // ... existing onMounted code ...
+});
+
+// 화면 크기 변경 시 지도 다시 그리기
+onMounted(() => {
+  const handleResize = () => {
+    d3.select(mapContainer.value).select("svg").remove();
+    initMap();
+  };
+
+  window.addEventListener("resize", handleResize);
+  onUnmounted(() => {
+    window.removeEventListener("resize", handleResize);
+  });
+});
+
+// 필터링된 클럽 목록
+const filteredClubs = computed(() => {
+  if (!selectedRegion.value) return clubsByLocation;
+  return {
+    [selectedRegion.value]: clubsByLocation[selectedRegion.value] || [],
+  };
 });
 
 // Intersection Observer 설정
@@ -97,22 +160,6 @@ onMounted(() => {
     observer.disconnect();
   });
 });
-
-const clubMediaTypes = computed(() => {
-  const types = {};
-  clubStore.totalClubs.forEach((club) => {
-    try {
-      const backgroundUrl = getUrlByType(club.urls, UrlType.background);
-      types[club.id] = getMediaType(backgroundUrl);
-    } catch (error) {
-      console.error("클럽 미디어 타입 확인 중 오류:", error, {
-        clubId: club.id,
-      });
-      types[club.id] = "none";
-    }
-  });
-  return types;
-});
 </script>
 
 <template>
@@ -130,83 +177,11 @@ const clubMediaTypes = computed(() => {
       </UButton>
     </div>
 
-    <ClientOnly>
-      <div
-        v-for="(clubs, location) in clubsByLocation"
-        v-show="clubs.length > 0"
-        :key="location"
-        class="mb-12"
-      >
-        <h2 class="text-2xl font-semibold mb-6 p-4 rounded-lg">
-          {{ location }}
-        </h2>
-
-        <UPageGrid>
-          <ULandingHero
-            v-for="club in clubs"
-            :key="club.id"
-            size="sm"
-            class="h-full"
-            :ui="{
-              background: getBackgroundConfig(
-                getUrlByType(club.urls, UrlType.background)
-              ),
-            }"
-          >
-            <!-- 로컬 비디오 -->
-            <video
-              v-if="clubMediaTypes[club.id] === 'video'"
-              :ref="(el) => (videoRefs[club.id] = el)"
-              :data-club-id="club.id"
-              class="video-background"
-              :style="`opacity: ${VIDEO_OPACITY}%`"
-              muted
-              loop
-              playsinline
-            >
-              <source
-                :src="getUrlByType(club.urls, UrlType.background)"
-                type="video/mp4"
-              />
-            </video>
-
-            <!-- YouTube/Instagram 임베드 -->
-            <iframe
-              v-if="['youtube', 'instagram'].includes(clubMediaTypes[club.id])"
-              :ref="(el) => (iframeRefs[club.id] = el)"
-              :data-club-id="club.id"
-              :src="getEmbedUrl(getUrlByType(club.urls, UrlType.background))"
-              class="video-background"
-              :style="`opacity: ${VIDEO_OPACITY}%`"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-            />
-
-            <template #title>
-              {{ getTranslatedText(club, "club_name") }}
-            </template>
-            <template #description>
-              {{ getTranslatedText(club, "description") }}
-            </template>
-            <template #links>
-              <UButton
-                v-for="url in getSocialMediaLinks(
-                  club.urls,
-                  $device.isMobile.value.value
-                )"
-                :key="url.type"
-                :icon="socialIcons[url.type].icon"
-                :color="socialIcons[url.type].color"
-                :to="url.value"
-                target="_blank"
-                size="lg"
-              />
-            </template>
-          </ULandingHero>
-        </UPageGrid>
-      </div>
-    </ClientOnly>
+    <!-- 지도 컨테이너 스타일 수정 -->
+    <div
+      ref="mapContainer"
+      class="w-full border rounded-lg overflow-hidden"
+    ></div>
   </div>
 </template>
 
@@ -240,5 +215,25 @@ const clubMediaTypes = computed(() => {
   top: 0;
   left: 0;
   transform: none;
+}
+
+/* 지도 컨테이너 스타일 추가 */
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.region {
+  cursor: pointer;
+  transition: fill 0.2s;
+}
+
+.region:hover {
+  fill: #bbb;
+}
+
+.region.selected {
+  fill: #666;
 }
 </style>

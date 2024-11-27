@@ -9,7 +9,8 @@
   },
   "nav": {
     "schedule": "Schedule",
-    "clubInfo": "Club Info"
+    "clubInfo": "Club Info",
+    "clubInfomap": "Club Info Map"
   },
   "schedule": {
     "title": "Class Schedule",
