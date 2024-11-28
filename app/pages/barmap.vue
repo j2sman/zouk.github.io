@@ -26,13 +26,11 @@ const mapContainer = ref(null);
 // 바 목록 표시 상태
 const showBarList = ref(false);
 
-// 컴포넌트 마운트 시 바 데이터 가져오기
-onBeforeMount(() => {
-  barStore.fetchBars();
-});
-
 // 지도 초기화 함수
 const initMap = async () => {
+  // mapContainer가 존재하는지 확인
+  if (!mapContainer.value) return;
+
   const containerWidth = mapContainer.value.clientWidth;
   const containerHeight = $device.isMobile
     ? window.innerHeight * 0.9
@@ -134,13 +132,15 @@ const initMap = async () => {
   }
 };
 
-// 컴포넌트 마운트 시 지도 초기화
-onMounted(() => {
-  initMap();
-});
-
 // 화면 크기 변경 시 지도 다시 그리기
-onMounted(() => {
+onMounted(async () => {
+  await barStore.fetchBars();
+
+  // nextTick을 사용하여 DOM이 완전히 렌더링된 후 초기화
+  nextTick(() => {
+    initMap();
+  });
+
   const handleResize = () => {
     d3.select(mapContainer.value).select("svg").remove();
     initMap();
