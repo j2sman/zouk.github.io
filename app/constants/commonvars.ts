@@ -1,3 +1,4 @@
+import { Location } from "~/database/clubinfo";
 export const MAP_FILE_PATH_COMPRESSED = "/korea.lz4.txt";
 export const MAP_FILE_PATH_DECOMPRESSED = "/korea.json";
 
@@ -10,6 +11,10 @@ export const VIDEO_OPACITY = 40;
 // 배경 비디오 URL
 export const INDEX_BACKGROUND_VIDEO =
   "https://www.youtube.com/watch?v=JawTJWFum64";
+
+// 동호회 소개 비디오 URL
+export const CLUBINFO_BACKGROUND_VIDEO =
+  "https://www.youtube.com/watch?v=7jU-h-ctxVI";
 
 // 캘린더 ID 목록
 export const CALENDAR_IDS = ["zoukkorea@gmail.com"];
@@ -50,5 +55,56 @@ export const SOCIAL_ICONS = {
   daumcafe: {
     icon: "i-simple-icons-kakao",
     color: "orange",
+  },
+};
+
+export const locationMapping = {
+  [Location.seoul]: {
+    ko: "서울특별시",
+    en: "Seoul",
+  },
+  [Location.gyeonggi]: {
+    ko: "경기도",
+    en: "Gyeonggi",
+  },
+  [Location.incheon]: {
+    ko: "인천광역시",
+    en: "Incheon",
+  },
+  [Location.gangwon]: {
+    ko: "강원도",
+    en: "Gangwon",
+  },
+  [Location.chungbuk]: {
+    ko: "충청북도",
+    en: "North Chungcheong",
+  },
+  [Location.chungnam]: {
+    ko: "충청남도",
+    en: "South Chungcheong",
+  },
+  [Location.busan]: {
+    ko: "부산광역시",
+    en: "Busan",
+  },
+  [Location.daegu]: {
+    ko: "대구광역시",
+    en: "Gwangju",
+  },
+  [Location.daejeon]: {
+    ko: "대전광역시",
+    en: "Daejeon",
+  },
+  [Location.ulsan]: {
+    ko: "울산광역시",
+    en: "Ulsan",
+  },
+  [Location.sejong]: {
+    ko: "세종특별자치시",
+    en: "Sejong",
+  },
+  [Location.jeju]: {
+    ko: "제주특별자치도",
+    en: "Jeju",
   },
 };
