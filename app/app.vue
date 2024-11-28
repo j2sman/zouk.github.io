@@ -12,16 +12,16 @@ const clubStore = useClubStore();
 
 const links = computed(() => [
   {
-    label: t("nav.schedule"),
-    to: locale.value === "ko" ? "/" : `/${locale.value}`,
-  },
-  {
     label: t("nav.clubInfomap"),
-    to: locale.value === "ko" ? "/clubInfomap" : `/${locale.value}/clubInfomap`,
+    to: locale.value === "ko" ? "/" : `/${locale.value}`,
   },
   {
     label: t("nav.barmap"),
     to: locale.value === "ko" ? "/barmap" : `/${locale.value}/barmap`,
+  },
+  {
+    label: t("nav.schedule"),
+    to: locale.value === "ko" ? "/schedule" : `/${locale.value}/schedule`,
   },
   // ...(import.meta.dev
   //   ? [

@@ -1,5 +1,187 @@
+<script setup>
+import { Location, UrlType } from "~/database/clubinfo";
+import * as d3 from "d3";
+import {
+  CLUBINFO_BACKGROUND_VIDEO,
+  VIDEO_OPACITY,
+  QNA_URL,
+  LOCATION_NAME_MAPPING,
+  SOCIAL_ICONS,
+  LOCATION_LABEL_OFFSETS,
+} from "~/constants/commonvars";
+import {
+  getLocationKey,
+  IS_CLUBINFO_YOUTUBE_BACKGROUND_VIDEO,
+} from "~/constants/commoncomputed";
+import { loadKoreaMap } from "~/utils/map";
+import {
+  getMediaType,
+  getBackgroundConfig,
+  getEmbedUrl,
+  getUrlByType,
+} from "~/utils/media";
+import { getSocialMediaLinks, getTranslatedText } from "~/utils/media";
+import clublistmodal from "~/components/clublistmodal.vue";
+
+const { t, locale } = useI18n();
+const clubStore = useClubStore();
+const { $device } = useNuxtApp();
+
+const backgroundVideo = ref(CLUBINFO_BACKGROUND_VIDEO);
+const isYoutubeVideo = ref(IS_CLUBINFO_YOUTUBE_BACKGROUND_VIDEO);
+const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
+
+// locale이 준비되었는지 확인하는 computed 속성 추가
+const isLocaleReady = computed(() => !!locale.value);
+
+// 지도 관련 상태 추가
+const selectedRegion = ref(null);
+const mapContainer = ref(null);
+
+// 클럽 목록 표시 상태 추가
+const showClubList = ref(false);
+
+// 컴포넌트 마운트 시 클럽 데이터 가져오기
+onBeforeMount(() => {
+  clubStore.fetchClubs();
+});
+
+// 지도 초기화 함수
+const initMap = async () => {
+  // 컨테이너의 실제 크기를 가져옵니다
+  const containerWidth = mapContainer.value.clientWidth;
+  const containerHeight = window.innerHeight * 0.7; // 화면 높이의 70% 사용
+
+  const svg = d3
+    .select(mapContainer.value)
+    .append("svg")
+    .attr("width", "100%")
+    .attr("height", containerHeight)
+    .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`)
+    .style("background", "transparent");
+
+  try {
+    // 압축된 GeoJSON 데이터 로드
+    const koreaMap = await loadKoreaMap();
+
+    // 지도 프로젝션 설정 - 크기에 맞게 조정
+    const projection = d3
+      .geoMercator()
+      .center([127.5, 36])
+      .scale(containerWidth * 5) // 컨테이너 크기에 비례하여 스케일 조정
+      .translate([containerWidth / 2, containerHeight / 2]);
+
+    const path = d3.geoPath().projection(projection);
+
+    // 지도 그리기
+    svg
+      .selectAll("path")
+      .data(koreaMap.features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("class", (d) => {
+        const locationKey = getLocationKey(d.properties.name);
+        const hasClubs = clubStore.hasClubsInLocation(locationKey);
+        return `region ${
+          selectedRegion.value === d.properties.name ? "selected" : ""
+        } ${hasClubs ? "active" : "inactive"}`;
+      })
+      .attr("fill", (d) => {
+        const locationKey = getLocationKey(d.properties.name);
+        return clubStore.hasClubsInLocation(locationKey)
+          ? "#e4e4e4"
+          : "#f5f5f5";
+      })
+      .attr("stroke", "#fff")
+      .attr("stroke-width", "1.5")
+      .on("click", (event, d) => {
+        const locationKey = getLocationKey(d.properties.name);
+        const hasClubs = clubStore.hasClubsInLocation(locationKey);
+        if (hasClubs) {
+          handleRegionClick(d.properties.name);
+        }
+      });
+
+    // 지역명 레이블 추가
+    svg
+      .selectAll("text")
+      // // 전체 데이터 표시
+      // .data(koreaMap.features)
+      // 클럽이 있는 지역만 표시
+      .data(
+        koreaMap.features.filter((d) => {
+          const locationKey = getLocationKey(d.properties.name);
+          return clubStore.hasClubsInLocation(locationKey);
+        })
+      )
+      .enter()
+      .append("text")
+      .attr("class", "region-label")
+      .attr("transform", (d) => {
+        const locationKey = getLocationKey(d.properties.name);
+        const regionData = LOCATION_LABEL_OFFSETS[locationKey];
+        const centroid = path.centroid(d);
+        const offset = regionData ?? [0, 0];
+        return `translate(${centroid[0] + offset[0]}, ${
+          centroid[1] + offset[1]
+        })`;
+      })
+      .attr("text-anchor", "middle")
+      .attr("dy", ".35em")
+      .text((d) => {
+        const locationKey = getLocationKey(d.properties.name);
+        return (
+          LOCATION_NAME_MAPPING[locationKey]?.[locale.value] ||
+          d.properties.name
+        );
+      })
+      .attr("font-size", "14px")
+      .attr("fill", "#333333")
+      .attr("stroke", "#ffffff")
+      .attr("stroke-width", "2px")
+      .attr("paint-order", "stroke")
+      .style("font-weight", "700")
+      .style("cursor", "pointer")
+      .style("text-shadow", "2px 2px 4px rgba(0,0,0,0.2)")
+      .attr("pointer-events", "all")
+      .on("click", (event, d) => {
+        handleRegionClick(d.properties.name);
+      });
+  } catch (error) {
+    console.error("지도 데이터 로드 실패:", error);
+  }
+};
+
+// 컴포넌트 마운트 시 지 초기화
+onMounted(() => {
+  initMap();
+  // ... existing onMounted code ...
+});
+
+// 화면 크기 변경 시 지도 다시 그리기
+onMounted(() => {
+  const handleResize = () => {
+    d3.select(mapContainer.value).select("svg").remove();
+    initMap();
+  };
+
+  window.addEventListener("resize", handleResize);
+  onUnmounted(() => {
+    window.removeEventListener("resize", handleResize);
+  });
+});
+
+// 지도 클릭 핸들러 수정
+const handleRegionClick = (regionName) => {
+  selectedRegion.value = regionName;
+  showClubList.value = true;
+};
+</script>
+
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div v-if="isLocaleReady" class="container mx-auto px-4 py-8">
+    <!--
     <div class="video-background">
       <iframe
         v-if="isYoutubeVideo"
@@ -13,101 +195,32 @@
         <source :src="backgroundVideo" type="video/mp4" />
       </video>
     </div>
+    -->
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl font-bold">
-        {{ $t("schedule.title") }}
-      </h1>
+      <h1 class="text-4xl font-bold text-white">{{ $t("clubs.title") }}</h1>
+      <UButton
+        icon="i-ri-kakao-talk-fill"
+        color="yellow"
+        :to="QNA_URL"
+        target="_blank"
+        size="lg"
+      >
+        {{ $t("clubs.qna") }}
+      </UButton>
     </div>
 
-    <!-- 구글 캘린더 임베드 -->
-    <ClientOnly>
-      <div
-        class="calendar-container bg-white/5 dark:bg-gray-900/20 rounded-xl p-4"
-      >
-        <iframe
-          :src="calendarUrl"
-          style="border: 0"
-          class="w-full h-[80vh] bg-transparent"
-          frameborder="0"
-          scrolling="no"
-        ></iframe>
-      </div>
-    </ClientOnly>
+    <div class="map-container backdrop-blur-sm bg-white/30">
+      <div ref="mapContainer" class="w-full overflow-hidden"></div>
+    </div>
+
+    <clublistmodal
+      v-model:showClubList="showClubList"
+      :selectedRegion="selectedRegion"
+    />
   </div>
 </template>
 
-<script setup>
-import {
-  INDEX_BACKGROUND_VIDEO,
-  MAIN_CALENDAR_ID,
-} from "~/constants/commonvars";
-import { IS_INDEX_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
-import { getEmbedUrl, getCalendarUrl } from "~/utils/media";
-import { useCalendarStore } from "~/stores/calandarStore";
-const { t, locale } = useI18n();
-const colorMode = useColorMode();
-
-const backgroundVideo = ref(INDEX_BACKGROUND_VIDEO);
-const isYoutubeVideo = ref(IS_INDEX_YOUTUBE_BACKGROUND_VIDEO);
-const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
-
-const calendarStore = useCalendarStore();
-// 캘린더 ID들을 저장할 ref 생성
-const combinedCalendarIds = ref([]);
-
-// 컴포넌트 마운트 시 캘린더 목록 가져오기
-onMounted(async () => {
-  await calendarStore.fetchCalendarList();
-
-  if (import.meta.dev) {
-    console.log(`calendarList : ${JSON.stringify(calendarStore.calendarList)}`);
-  }
-
-  // 활성화된 캘린더만 필터링하고 ID 추가
-  const enabledCalendarIds =
-    calendarStore.calendarList
-      ?.filter((calendar) => calendar.enabled)
-      ?.map((calendar) => calendar.calendar_id) || [];
-
-  combinedCalendarIds.value = enabledCalendarIds;
-});
-
-// calendarUrl 생성 시 combinedCalendarIds 사용
-const calendarUrl = computed(() => {
-  return getCalendarUrl(
-    MAIN_CALENDAR_ID,
-    combinedCalendarIds.value,
-    colorMode,
-    locale.value
-  );
-});
-
-useHead({
-  title: `${t("schedule.title")} - Zouk Korea`,
-  meta: [
-    {
-      name: "description",
-      content: t("schedule.description"),
-    },
-  ],
-});
-</script>
-
 <style scoped>
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-.min-h-screen {
-  min-height: calc(100vh - 64px); /* 헤더 높이만큼 빼기 */
-}
-
 .video-background {
   position: fixed;
   top: 0;
@@ -125,7 +238,7 @@ useHead({
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7); /* 여기서 투명도 조절 (0.2 = 60% 투명) */
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .video-background video,
@@ -139,22 +252,53 @@ useHead({
   transform: none;
 }
 
-.calendar-container {
-  position: relative;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.05);
+.region {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.region.active {
+  fill: #4a90e2;
+  opacity: 0.8;
+}
+
+.region.active:hover {
+  fill: #357abd;
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.region.inactive {
+  fill: #e8e8e8;
+  cursor: default;
+}
+
+.region.selected {
+  fill: #2c5282;
+  opacity: 1;
+}
+
+.region-label {
+  transition: all 0.3s ease;
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+.region-label:hover {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.map-container {
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(8px);
-}
-
-/* 구글 캘린더 iframe 투명도 조정을 위한 새로운 스타일 */
-.calendar-container iframe {
-  opacity: 0.8; /* 50% 불투명도로 변경 */
-  transition: opacity 0.3s ease;
-}
-
-.calendar-container:hover iframe {
-  opacity: 1; /* 호버시 100% 불투명 */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>

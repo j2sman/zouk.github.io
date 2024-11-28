@@ -41,7 +41,8 @@ const initMap = async () => {
     .append("svg")
     .attr("width", "100%")
     .attr("height", containerHeight)
-    .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`);
+    .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`)
+    .style("background", "transparent");
 
   try {
     const koreaMap = await loadKoreaMap();
@@ -73,6 +74,7 @@ const initMap = async () => {
         return barStore.hasBarsInLocation(locationKey) ? "#e4e4e4" : "#f5f5f5";
       })
       .attr("stroke", "#fff")
+      .attr("stroke-width", "1.5")
       .on("click", (event, d) => {
         const locationKey = getLocationKey(d.properties.name);
         const hasBars = barStore.hasBarsInLocation(locationKey);
@@ -159,11 +161,8 @@ const handleRegionClick = (regionName) => {
       <h1 class="text-4xl font-bold">{{ $t("bars.title") }}</h1>
     </div>
 
-    <div class="relative">
-      <div
-        ref="mapContainer"
-        class="w-full border rounded-lg overflow-hidden"
-      ></div>
+    <div class="map-container backdrop-blur-sm bg-white/30">
+      <div ref="mapContainer" class="w-full overflow-hidden"></div>
     </div>
 
     <!-- 바 목록 모달 -->
@@ -175,20 +174,84 @@ const handleRegionClick = (regionName) => {
 </template>
 
 <style scoped>
+.video-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.video-background::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.video-background video,
+.video-background iframe {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: none;
+}
+
 .region {
   cursor: pointer;
-  transition: fill 0.3s ease;
+  transition: all 0.3s ease;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.region.active {
+  fill: #4a90e2;
+  opacity: 0.8;
 }
 
 .region.active:hover {
-  fill: #d1d1d1;
+  fill: #357abd;
+  opacity: 1;
+  transform: translateY(-2px);
 }
 
 .region.inactive {
+  fill: #e8e8e8;
   cursor: default;
 }
 
 .region.selected {
-  fill: #b8b8b8;
+  fill: #2c5282;
+  opacity: 1;
+}
+
+.region-label {
+  transition: all 0.3s ease;
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+.region-label:hover {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.map-container {
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>
