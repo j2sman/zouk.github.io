@@ -9,7 +9,7 @@ import { UrlType } from "~/database/clubinfo";
 import {
   VIDEO_OPACITY,
   SOCIAL_ICONS,
-  locationMapping,
+  LOCATION_NAME_MAPPING,
 } from "~/constants/commonvars";
 import { getLocationKey } from "~/constants/commoncomputed";
 import { getSocialMediaLinks, getTranslatedText } from "~/utils/media";
@@ -63,7 +63,9 @@ const clubBackgroundMediaTypes = computed(() => {
 const localizedSelectedRegion = computed(() => {
   if (!props.selectedRegion) return "";
   const locationKey = getLocationKey(props.selectedRegion);
-  return locationMapping[locationKey]?.[locale.value] || props.selectedRegion;
+  return (
+    LOCATION_NAME_MAPPING[locationKey]?.[locale.value] || props.selectedRegion
+  );
 });
 
 // 필터링된 클럽 목록

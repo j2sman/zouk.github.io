@@ -1,7 +1,7 @@
 import {
   INDEX_BACKGROUND_VIDEO,
   CLUBINFO_BACKGROUND_VIDEO,
-  locationMapping,
+  LOCATION_NAME_MAPPING,
 } from "./commonvars";
 
 // YouTube 비디오 여부 확인
@@ -21,7 +21,7 @@ export const IS_CLUBINFO_YOUTUBE_BACKGROUND_VIDEO = computed(() => {
 });
 
 export const getLocationKey = (propertyName: string) => {
-  return Object.entries(locationMapping).find(
+  return Object.entries(LOCATION_NAME_MAPPING).find(
     ([_, value]) => value.ko === propertyName || value.en === propertyName
   )?.[0];
 };

@@ -73,7 +73,7 @@ export const MAP_ICONS = {
   },
 };
 
-export const locationMapping = {
+export const LOCATION_NAME_MAPPING = {
   [Location.seoul]: {
     ko: "서울특별시",
     en: "Seoul",
@@ -124,7 +124,7 @@ export const locationMapping = {
   },
 };
 
-export const labelOffsets = {
+export const LOCATION_LABEL_OFFSETS = {
   [Location.seoul]: [0, 0],
   [Location.gyeonggi]: [0, -20],
   [Location.incheon]: [-20, 0],

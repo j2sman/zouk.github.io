@@ -1,6 +1,6 @@
 <script setup>
 import { AddressType } from "~/database/clubinfo";
-import { locationMapping, MAP_ICONS } from "~/constants/commonvars";
+import { LOCATION_NAME_MAPPING, MAP_ICONS } from "~/constants/commonvars";
 import { getLocationKey } from "~/constants/commoncomputed";
 import { getTranslatedText } from "~/utils/media";
 
@@ -33,7 +33,9 @@ const safeGetTranslatedText = (bar, field) => {
 const localizedSelectedRegion = computed(() => {
   if (!props.selectedRegion) return "";
   const locationKey = getLocationKey(props.selectedRegion);
-  return locationMapping[locationKey]?.[locale.value] || props.selectedRegion;
+  return (
+    LOCATION_NAME_MAPPING[locationKey]?.[locale.value] || props.selectedRegion
+  );
 });
 
 // 필터링된 바 목록

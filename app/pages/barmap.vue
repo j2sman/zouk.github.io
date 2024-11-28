@@ -4,9 +4,9 @@ import * as d3 from "d3";
 import {
   VIDEO_OPACITY,
   QNA_URL,
-  locationMapping,
+  LOCATION_NAME_MAPPING,
   SOCIAL_ICONS,
-  labelOffsets,
+  LOCATION_LABEL_OFFSETS,
 } from "~/constants/commonvars";
 import { getLocationKey } from "~/constants/commoncomputed";
 import { loadKoreaMap } from "~/utils/map";
@@ -95,7 +95,7 @@ const initMap = async () => {
       .attr("class", "region-label")
       .attr("transform", (d) => {
         const locationKey = getLocationKey(d.properties.name);
-        const regionData = labelOffsets[locationKey];
+        const regionData = LOCATION_LABEL_OFFSETS[locationKey];
         const centroid = path.centroid(d);
         const offset = regionData ?? [0, 0];
         return `translate(${centroid[0] + offset[0]}, ${
@@ -107,7 +107,8 @@ const initMap = async () => {
       .text((d) => {
         const locationKey = getLocationKey(d.properties.name);
         return (
-          locationMapping[locationKey]?.[locale.value] || d.properties.name
+          LOCATION_NAME_MAPPING[locationKey]?.[locale.value] ||
+          d.properties.name
         );
       })
       .attr("font-size", "14px")
