@@ -2,13 +2,13 @@ import { defineStore } from "pinia";
 import { ClubInfoExtService } from "~/database/clubinfo";
 import type { ClubInfoExt, CalendarList } from "~/database/clubinfo";
 import { useI18n } from "#imports";
+import type { BarInfoExt } from "~/database/clubinfo";
 
 export const useClubStore = defineStore("club", {
   state: () => ({
     selectedClubId: null as string | null,
     selectedClub: null as ClubInfoExt | null,
     totalClubs: [] as ClubInfoExt[],
-    calendarList: [] as CalendarList[],
   }),
 
   actions: {
@@ -29,18 +29,6 @@ export const useClubStore = defineStore("club", {
       if (import.meta.dev) {
         console.log(`this.totalClubs:\n${JSON.stringify(this.totalClubs)}`); // URL 데이터 로깅
       }
-    },
-
-    async fetchCalendarList() {
-      const supabase = useSupabaseClient();
-      const clubService = new ClubInfoExtService(supabase);
-      const { data: calendarList, error } = await clubService.getCalendarList();
-      if (error) {
-        console.error("캘린더 목록을 불러오는데 실패했습니다:", error);
-        return;
-      }
-
-      this.calendarList = calendarList || [];
     },
 
     setSelectedClub(clubId: string) {

@@ -43,7 +43,7 @@ import {
 } from "~/constants/commonvars";
 import { IS_INDEX_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
 import { getEmbedUrl, getCalendarUrl } from "~/utils/media";
-import { useClubStore } from "~/stores/clubstore";
+import { useCalendarStore } from "~/stores/calandarStore";
 const { t, locale } = useI18n();
 const colorMode = useColorMode();
 
@@ -51,21 +51,21 @@ const backgroundVideo = ref(INDEX_BACKGROUND_VIDEO);
 const isYoutubeVideo = ref(IS_INDEX_YOUTUBE_BACKGROUND_VIDEO);
 const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
 
-const clubStore = useClubStore();
+const calendarStore = useCalendarStore();
 // 캘린더 ID들을 저장할 ref 생성
 const combinedCalendarIds = ref([]);
 
 // 컴포넌트 마운트 시 캘린더 목록 가져오기
 onMounted(async () => {
-  await clubStore.fetchCalendarList();
+  await calendarStore.fetchCalendarList();
 
   if (import.meta.dev) {
-    console.log(`calendarList : ${JSON.stringify(clubStore.calendarList)}`);
+    console.log(`calendarList : ${JSON.stringify(calendarStore.calendarList)}`);
   }
 
   // 활성화된 캘린더만 필터링하고 ID 추가
   const enabledCalendarIds =
-    clubStore.calendarList
+    calendarStore.calendarList
       ?.filter((calendar) => calendar.enabled)
       ?.map((calendar) => calendar.calendar_id) || [];
 

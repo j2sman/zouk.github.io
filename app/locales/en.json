@@ -30,5 +30,8 @@
     "select": "Select Club",
     "title": "Club Info",
     "qna": "QnA About Adding Club"
+  },
+  "bars": {
+    "select": "Select Bar"
   }
 }

@@ -93,12 +93,52 @@ export interface ClubInfoExtListResponse {
   error: Error | null;
 }
 
+// 라틴바 기본 정보 타입
+export interface BarInfo {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 라틴바 전체 정보 타입
+export interface BarInfoExt extends BarInfo {
+  translations: {
+    [key in SupportedLanguage]?: {
+      name: string;
+      description: string;
+    };
+  };
+  addresses: BarAddress[];
+}
+
+// 라틴바 주소 타입
+export interface BarAddress {
+  id: string;
+  bar_id: string;
+  url_address: string;
+  address_type: string;
+  is_primary: boolean;
+}
+
+// 응답 타입 추가
+export interface BarInfoExtResponse {
+  data: BarInfoExt | null;
+  error: Error | null;
+}
+
+export interface BarInfoExtListResponse {
+  data: BarInfoExt[];
+  error: Error | null;
+}
+
 export class ClubInfoExtService {
   private readonly supabase: SupabaseClient;
   private readonly calendarTableName = "calendarlist".toLowerCase();
   private readonly clubTableName = "clubinfo".toLowerCase();
   private readonly i18nTableName = "clubinfoi18n".toLowerCase();
   private readonly urlTableName = "cluburls".toLowerCase();
+  private readonly barTableName = "barinfo".toLowerCase();
+  private readonly addressTableName = "barinfoaddress".toLowerCase();
 
   constructor(supabase: SupabaseClient) {
     this.supabase = supabase;
@@ -253,6 +293,54 @@ export class ClubInfoExtService {
       return { data: formattedData, error: null };
     } catch (error) {
       console.error("Error searching clubs with translations:", error);
+      return { data: [], error: error as Error };
+    }
+  }
+
+  async getAllBarsWithTranslations(): Promise<BarInfoExtListResponse> {
+    try {
+      const { data: barsData, error: barsError } = await this.supabase.from(
+        this.barTableName
+      ).select(`
+          *,
+          translations:${this.i18nTableName}!bar_id(
+            id,
+            language_code,
+            name,
+            description
+          ),
+          addresses:${this.addressTableName}!bar_id(
+            id,
+            url_address,
+            address_type,
+            is_primary
+          )
+        `);
+
+      if (barsError) throw barsError;
+
+      const formattedData = barsData.map((bar: any) => {
+        const translations: BarInfoExt["translations"] = {};
+
+        bar.translations.forEach((trans: any) => {
+          translations[trans.language_code as SupportedLanguage] = {
+            name: trans.name,
+            description: trans.description,
+          };
+        });
+
+        return {
+          id: bar.id,
+          created_at: bar.created_at,
+          updated_at: bar.updated_at,
+          translations,
+          addresses: bar.addresses,
+        };
+      });
+
+      return { data: formattedData, error: null };
+    } catch (error) {
+      console.error("Error fetching bars with translations:", error);
       return { data: [], error: error as Error };
     }
   }
