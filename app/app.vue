@@ -19,6 +19,10 @@ const links = computed(() => [
     label: t("nav.clubInfomap"),
     to: locale.value === "ko" ? "/clubInfomap" : `/${locale.value}/clubInfomap`,
   },
+  {
+    label: t("nav.barmap"),
+    to: locale.value === "ko" ? "/barmap" : `/${locale.value}/barmap`,
+  },
   // ...(import.meta.dev
   //   ? [
   //       {

@@ -58,6 +58,17 @@ export const SOCIAL_ICONS = {
   },
 };
 
+export const MAP_ICONS = {
+  naver: {
+    icon: "i-simple-icons-naver",
+    color: "green",
+  },
+  google: {
+    icon: "i-simple-icons-google",
+    color: "blue",
+  },
+};
+
 export const locationMapping = {
   [Location.seoul]: {
     ko: "서울특별시",
@@ -107,4 +118,24 @@ export const locationMapping = {
     ko: "제주특별자치도",
     en: "Jeju",
   },
+};
+
+export const labelOffsets = {
+  [Location.seoul]: [0, 0],
+  [Location.gyeonggi]: [0, -20],
+  [Location.incheon]: [-20, 0],
+  [Location.gangwon]: [20, -20],
+  [Location.chungbuk]: [0, 0],
+  [Location.chungnam]: [-30, 0],
+  [Location.busan]: [20, 10],
+  [Location.daegu]: [-10, -10],
+  [Location.gwangju]: [-15, 15],
+  [Location.daejeon]: [15, -5],
+  [Location.ulsan]: [20, 0],
+  [Location.sejong]: [-5, 10],
+  [Location.jeonbuk]: [0, 0],
+  [Location.jeonnam]: [-20, 20],
+  [Location.gyeongbuk]: [30, 0],
+  [Location.gyeongnam]: [0, 15],
+  [Location.jeju]: [0, 10],
 };

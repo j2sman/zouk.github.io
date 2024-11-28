@@ -24,6 +24,9 @@ export const useBarStore = defineStore("bar", {
       }
 
       this.totalBars = barsData;
+      if (import.meta.dev) {
+        console.log(`this.totalBars:\n${JSON.stringify(this.totalBars)}`); // URL 데이터 로깅
+      }
     },
 
     setSelectedBar(barId: string) {
@@ -41,6 +44,28 @@ export const useBarStore = defineStore("bar", {
             ?.name || "",
         value: bar.id,
       }));
+    },
+
+    hasBarsInLocation: (state) => {
+      return (location: string) => {
+        if (!location) return false;
+
+        return state.totalBars.some((bar) => {
+          const normalizedBarLocation = String(bar.location)
+            .trim()
+            .toLowerCase();
+          const normalizedLocation = String(location).trim().toLowerCase();
+
+          if (import.meta.dev) {
+            console.log("Comparing locations:", {
+              barLocation: normalizedBarLocation,
+              searchLocation: normalizedLocation,
+            });
+          }
+
+          return normalizedBarLocation === normalizedLocation;
+        });
+      };
     },
   },
 });

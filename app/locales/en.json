@@ -10,7 +10,8 @@
   "nav": {
     "schedule": "Schedule",
     "clubInfo": "Club Info",
-    "clubInfomap": "Club Info"
+    "clubInfomap": "Club Info",
+    "barmap": "Latin Bar Locations"
   },
   "schedule": {
     "title": "Schedule",
@@ -32,6 +33,7 @@
     "qna": "QnA About Adding Club"
   },
   "bars": {
-    "select": "Select Bar"
+    "title": "Latin Bar Locations",
+    "select": "Select Latin Bar"
   }
 }

@@ -2,55 +2,39 @@
 import { Location, UrlType } from "~/database/clubinfo";
 import * as d3 from "d3";
 import {
-  CLUBINFO_BACKGROUND_VIDEO,
   VIDEO_OPACITY,
   QNA_URL,
   locationMapping,
   SOCIAL_ICONS,
   labelOffsets,
 } from "~/constants/commonvars";
-import {
-  getLocationKey,
-  IS_CLUBINFO_YOUTUBE_BACKGROUND_VIDEO,
-} from "~/constants/commoncomputed";
+import { getLocationKey } from "~/constants/commoncomputed";
 import { loadKoreaMap } from "~/utils/map";
-import {
-  getMediaType,
-  getBackgroundConfig,
-  getEmbedUrl,
-  getUrlByType,
-} from "~/utils/media";
-import { getSocialMediaLinks, getTranslatedText } from "~/utils/media";
-import clublistmodal from "~/components/clublistmodal.vue";
+import barlistmodal from "~/components/barlistmodal.vue";
 
 const { t, locale } = useI18n();
-const clubStore = useClubStore();
+const barStore = useBarStore();
 const { $device } = useNuxtApp();
 
-const backgroundVideo = ref(CLUBINFO_BACKGROUND_VIDEO);
-const isYoutubeVideo = ref(IS_CLUBINFO_YOUTUBE_BACKGROUND_VIDEO);
-const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
-
-// locale이 준비되었는지 확인하는 computed 속성 추가
+// locale이 준비되었는지 확인하는 computed 속성
 const isLocaleReady = computed(() => !!locale.value);
 
-// 지도 관련 상태 추가
+// 지도 관련 상태
 const selectedRegion = ref(null);
 const mapContainer = ref(null);
 
-// 클럽 목록 표시 상태 추가
-const showClubList = ref(false);
+// 바 목록 표시 상태
+const showBarList = ref(false);
 
-// 컴포넌트 마운트 시 클럽 데이터 가져오기
+// 컴포넌트 마운트 시 바 데이터 가져오기
 onBeforeMount(() => {
-  clubStore.fetchClubs();
+  barStore.fetchBars();
 });
 
 // 지도 초기화 함수
 const initMap = async () => {
-  // 컨테이너의 실제 크기를 가져옵니다
   const containerWidth = mapContainer.value.clientWidth;
-  const containerHeight = window.innerHeight * 0.7; // 화면 높이의 70% 사용
+  const containerHeight = window.innerHeight * 0.7;
 
   const svg = d3
     .select(mapContainer.value)
@@ -60,14 +44,12 @@ const initMap = async () => {
     .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`);
 
   try {
-    // 압축된 GeoJSON 데이터 로드
     const koreaMap = await loadKoreaMap();
 
-    // 지도 프로젝션 설정 - 크기에 맞게 조정
     const projection = d3
       .geoMercator()
       .center([127.5, 36])
-      .scale(containerWidth * 5) // 컨테이너 크기에 비례하여 스케일 조정
+      .scale(containerWidth * 5)
       .translate([containerWidth / 2, containerHeight / 2]);
 
     const path = d3.geoPath().projection(projection);
@@ -81,22 +63,20 @@ const initMap = async () => {
       .attr("d", path)
       .attr("class", (d) => {
         const locationKey = getLocationKey(d.properties.name);
-        const hasClubs = clubStore.hasClubsInLocation(locationKey);
+        const hasBars = barStore.hasBarsInLocation(locationKey);
         return `region ${
           selectedRegion.value === d.properties.name ? "selected" : ""
-        } ${hasClubs ? "active" : "inactive"}`;
+        } ${hasBars ? "active" : "inactive"}`;
       })
       .attr("fill", (d) => {
         const locationKey = getLocationKey(d.properties.name);
-        return clubStore.hasClubsInLocation(locationKey)
-          ? "#e4e4e4"
-          : "#f5f5f5";
+        return barStore.hasBarsInLocation(locationKey) ? "#e4e4e4" : "#f5f5f5";
       })
       .attr("stroke", "#fff")
       .on("click", (event, d) => {
         const locationKey = getLocationKey(d.properties.name);
-        const hasClubs = clubStore.hasClubsInLocation(locationKey);
-        if (hasClubs) {
+        const hasBars = barStore.hasBarsInLocation(locationKey);
+        if (hasBars) {
           handleRegionClick(d.properties.name);
         }
       });
@@ -104,13 +84,10 @@ const initMap = async () => {
     // 지역명 레이블 추가
     svg
       .selectAll("text")
-      // // 전체 데이터 표시
-      // .data(koreaMap.features)
-      // 클럽이 있는 지역만 표시
       .data(
         koreaMap.features.filter((d) => {
           const locationKey = getLocationKey(d.properties.name);
-          return clubStore.hasClubsInLocation(locationKey);
+          return barStore.hasBarsInLocation(locationKey);
         })
       )
       .enter()
@@ -150,10 +127,9 @@ const initMap = async () => {
   }
 };
 
-// 컴포넌트 마운트 시 지 초기화
+// 컴포넌트 마운트 시 지도 초기화
 onMounted(() => {
   initMap();
-  // ... existing onMounted code ...
 });
 
 // 화면 크기 변경 시 지도 다시 그리기
@@ -169,42 +145,19 @@ onMounted(() => {
   });
 });
 
-// 지도 클릭 핸들러 수정
+// 지도 클릭 핸들러
 const handleRegionClick = (regionName) => {
   selectedRegion.value = regionName;
-  showClubList.value = true;
+  showBarList.value = true;
 };
 </script>
 
 <template>
   <div v-if="isLocaleReady" class="container mx-auto px-4 py-8">
-    <div class="video-background">
-      <iframe
-        v-if="isYoutubeVideo"
-        :src="youtubeEmbedUrl"
-        class="absolute inset-0 w-full h-full"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen
-      ></iframe>
-      <video v-else autoplay muted loop preload="none">
-        <source :src="backgroundVideo" type="video/mp4" />
-      </video>
-    </div>
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl font-bold">{{ $t("clubs.title") }}</h1>
-      <UButton
-        icon="i-ri-kakao-talk-fill"
-        color="yellow"
-        :to="QNA_URL"
-        target="_blank"
-        size="lg"
-      >
-        {{ $t("clubs.qna") }}
-      </UButton>
+      <h1 class="text-4xl font-bold">{{ $t("bars.title") }}</h1>
     </div>
 
-    <!-- 지도 컨테이너 위에 메시지 추가 -->
     <div class="relative">
       <div
         ref="mapContainer"
@@ -212,43 +165,29 @@ const handleRegionClick = (regionName) => {
       ></div>
     </div>
 
-    <!-- 클럽 목록 모달 -->
-    <clublistmodal
-      v-model:showClubList="showClubList"
+    <!-- 바 목록 모달 -->
+    <barlistmodal
+      v-model:showBarList="showBarList"
       :selectedRegion="selectedRegion"
     />
   </div>
 </template>
 
 <style scoped>
-.video-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  overflow: hidden;
+.region {
+  cursor: pointer;
+  transition: fill 0.3s ease;
 }
 
-.video-background::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7); /* 여기서 투명도 조절 (0.2 = 60% 투명) */
+.region.active:hover {
+  fill: #d1d1d1;
 }
 
-.video-background video,
-.video-background iframe {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: none;
+.region.inactive {
+  cursor: default;
+}
+
+.region.selected {
+  fill: #b8b8b8;
 }
 </style>

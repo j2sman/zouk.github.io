@@ -40,6 +40,11 @@ export enum Location {
   jeju = "Jeju",
 }
 
+export enum AddressType {
+  naver = "Naver",
+  google = "Google",
+}
+
 export interface CalendarList {
   id: string;
   calendar_id: string;
@@ -96,6 +101,7 @@ export interface ClubInfoExtListResponse {
 // 라틴바 기본 정보 타입
 export interface BarInfo {
   id: string;
+  location: Location;
   created_at: string;
   updated_at: string;
 }
@@ -105,18 +111,19 @@ export interface BarInfoExt extends BarInfo {
   translations: {
     [key in SupportedLanguage]?: {
       name: string;
+      address: string;
       description: string;
     };
   };
-  addresses: BarAddress[];
+  urls: BarUrl[];
 }
 
 // 라틴바 주소 타입
-export interface BarAddress {
+export interface BarUrl {
   id: string;
   bar_id: string;
   url_address: string;
-  address_type: string;
+  address_type: AddressType;
   is_primary: boolean;
 }
 
@@ -135,10 +142,11 @@ export class ClubInfoExtService {
   private readonly supabase: SupabaseClient;
   private readonly calendarTableName = "calendarlist".toLowerCase();
   private readonly clubTableName = "clubinfo".toLowerCase();
-  private readonly i18nTableName = "clubinfoi18n".toLowerCase();
-  private readonly urlTableName = "cluburls".toLowerCase();
+  private readonly clubi18nTableName = "clubinfoi18n".toLowerCase();
+  private readonly cluburlTableName = "cluburls".toLowerCase();
   private readonly barTableName = "barinfo".toLowerCase();
-  private readonly addressTableName = "barinfoaddress".toLowerCase();
+  private readonly barI18nTableName = "barinfoi18n".toLowerCase();
+  private readonly barUrlTableName = "barinfourl".toLowerCase();
 
   constructor(supabase: SupabaseClient) {
     this.supabase = supabase;
@@ -169,13 +177,13 @@ export class ClubInfoExtService {
         .select(
           `
           *,
-          translations:${this.i18nTableName}!club_id(
+          translations:${this.clubi18nTableName}!club_id(
             id,
             language,
             club_name,
             description
           ),
-          urls:${this.urlTableName}!club_id(
+          urls:${this.cluburlTableName}!club_id(
             id,
             type,
             value,
@@ -229,7 +237,7 @@ export class ClubInfoExtService {
     try {
       // 먼저 i18n 테이블에서 검색어와 매칭되는 club_id들을 찾음
       const { data: matchingClubIds, error: searchError } = await this.supabase
-        .from(this.i18nTableName)
+        .from(this.clubi18nTableName)
         .select("club_id")
         .ilike("club_name", `%${searchTerm}%`)
         .distinct();
@@ -247,13 +255,13 @@ export class ClubInfoExtService {
         .select(
           `
           *,
-          translations:${this.i18nTableName}!club_id(
+          translations:${this.clubi18nTableName}!club_id(
             id,
             language,
             club_name,
             description
           ),
-          urls:${this.urlTableName}!club_id(
+          urls:${this.cluburlTableName}!club_id(
             id,
             type,
             value
@@ -303,13 +311,14 @@ export class ClubInfoExtService {
         this.barTableName
       ).select(`
           *,
-          translations:${this.i18nTableName}!bar_id(
+          translations:${this.barI18nTableName}!bar_id(
             id,
             language_code,
             name,
+            address,
             description
           ),
-          addresses:${this.addressTableName}!bar_id(
+          urls:${this.barUrlTableName}!bar_id(
             id,
             url_address,
             address_type,
@@ -325,16 +334,18 @@ export class ClubInfoExtService {
         bar.translations.forEach((trans: any) => {
           translations[trans.language_code as SupportedLanguage] = {
             name: trans.name,
+            address: trans.address,
             description: trans.description,
           };
         });
 
         return {
           id: bar.id,
+          location: bar.location,
           created_at: bar.created_at,
           updated_at: bar.updated_at,
           translations,
-          addresses: bar.addresses,
+          urls: bar.urls,
         };
       });
 

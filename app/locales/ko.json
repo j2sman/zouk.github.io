@@ -10,7 +10,8 @@
   "nav": {
     "schedule": "일정",
     "clubInfo": "동호회 소개",
-    "clubInfomap": "동호회 소개"
+    "clubInfomap": "동호회 소개",
+    "barmap": "라틴바 위치"
   },
   "schedule": {
     "title": "수업 일정",
@@ -32,6 +33,7 @@
     "qna": "동호회 추가 관련 문의"
   },
   "bars": {
+    "title": "라틴바 위치",
     "select": "라틴바 선택"
   }
 }
