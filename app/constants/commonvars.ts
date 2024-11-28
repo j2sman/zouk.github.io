@@ -6,7 +6,7 @@ export const MAP_FILE_PATH_DECOMPRESSED = "/korea.json";
 export const QNA_URL = "https://open.kakao.com/o/sDKuRzAg";
 
 // 비디오 투명도 관리를 위한 ref 추가(0 ~ 100. 100 == 불투명)
-export const VIDEO_OPACITY = 40;
+export const VIDEO_OPACITY = 100;
 
 // 배경 비디오 URL
 export const INDEX_BACKGROUND_VIDEO =
