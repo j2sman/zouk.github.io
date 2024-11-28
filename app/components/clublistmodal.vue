@@ -155,73 +155,83 @@ onMounted(() => {
           </div>
         </template>
 
-        <div class="club-list-container">
-          <ULandingHero
+        <UPageGrid
+          :ui="{
+            wrapper:
+              'grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 2xl:grid-cols-1 gap-4',
+          }"
+        >
+          <UPageCard
             v-for="club in filteredClubs"
             :key="club.id"
-            size="sm"
-            class="club-item mb-4"
-            :ui="{
-              background: getBackgroundConfig(
-                getUrlByType(club.urls, UrlType.background)
-              ),
-            }"
+            :title="safeGetTranslatedText(club, 'club_name')"
+            :description="safeGetTranslatedText(club, 'description')"
+            class="club-item"
           >
-            <!-- video background -->
-            <video
-              v-if="clubBackgroundMediaTypes[club.id] === 'video'"
-              :ref="(el) => (videoRefs[club.id] = el)"
-              :data-club-id="club.id"
-              class="video-background"
-              :style="`opacity: ${VIDEO_OPACITY}%`"
-              muted
-              loop
-              playsinline
-            >
-              <source
-                :src="getUrlByType(club.urls, UrlType.background)"
-                type="video/mp4"
-              />
-            </video>
+            <template #icon>
+              <div class="club-media-container">
+                <!-- video background -->
+                <video
+                  v-if="clubBackgroundMediaTypes[club.id] === 'video'"
+                  :ref="(el) => (videoRefs[club.id] = el)"
+                  :data-club-id="club.id"
+                  class="club-media"
+                  :style="`opacity: ${VIDEO_OPACITY}%`"
+                  muted
+                  loop
+                  playsinline
+                  controlsList="nodownload nofullscreen noremoteplayback"
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  controls="false"
+                >
+                  <source
+                    :src="getUrlByType(club.urls, UrlType.background)"
+                    type="video/mp4"
+                  />
+                </video>
 
-            <!-- iframe background -->
-            <iframe
-              v-if="
-                ['youtube', 'instagram'].includes(
-                  clubBackgroundMediaTypes[club.id]
-                )
-              "
-              :ref="(el) => (iframeRefs[club.id] = el)"
-              :data-club-id="club.id"
-              :src="getEmbedUrl(getUrlByType(club.urls, UrlType.background))"
-              class="video-background"
-              :style="`opacity: ${VIDEO_OPACITY}%`"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-            />
+                <!-- iframe background -->
+                <iframe
+                  v-if="
+                    ['youtube', 'instagram'].includes(
+                      clubBackgroundMediaTypes[club.id]
+                    )
+                  "
+                  :ref="(el) => (iframeRefs[club.id] = el)"
+                  :data-club-id="club.id"
+                  :src="
+                    getEmbedUrl(getUrlByType(club.urls, UrlType.background))
+                  "
+                  class="club-media"
+                  :style="`opacity: ${VIDEO_OPACITY}%`"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                />
+              </div>
+            </template>
 
-            <template #title>
-              {{ safeGetTranslatedText(club, "club_name") }}
+            <template #footer>
+              <div class="flex gap-2">
+                <UButton
+                  v-for="url in getSocialMediaLinks(
+                    club.urls,
+                    $device.isMobile
+                  )"
+                  :key="url.type"
+                  :icon="socialIcons[url.type].icon"
+                  :color="socialIcons[url.type].color"
+                  :to="url.value"
+                  target="_blank"
+                  size="sm"
+                >
+                  {{ url.additional_info }}
+                </UButton>
+              </div>
             </template>
-            <template #description>
-              {{ safeGetTranslatedText(club, "description") }}
-            </template>
-            <template #links>
-              <UButton
-                v-for="url in getSocialMediaLinks(club.urls, $device.isMobile)"
-                :key="url.type"
-                :icon="socialIcons[url.type].icon"
-                :color="socialIcons[url.type].color"
-                :to="url.value"
-                target="_blank"
-                size="lg"
-              >
-                {{ url.additional_info }}
-              </UButton>
-            </template>
-          </ULandingHero>
-        </div>
+          </UPageCard>
+        </UPageGrid>
       </UCard>
     </UModal>
   </ClientOnly>
@@ -234,7 +244,7 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
 }
@@ -246,7 +256,7 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 1);
   z-index: -1;
   pointer-events: none;
 }
@@ -264,25 +274,30 @@ onMounted(() => {
 }
 
 :deep(.modal-container) {
-  max-width: 90vw;
-  width: 1200px;
-  max-height: 90vh;
+  max-width: 95vw;
+  width: 1600px;
+  max-height: 95vh;
   overflow-y: auto;
 }
 
 :deep(.modal-card) {
   max-height: 100%;
+  padding: 2rem;
 }
 
-.club-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.club-media-container {
+  position: relative;
   width: 100%;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 0.5rem;
 }
 
-.club-item {
+.club-media {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
 }
 
 /* 컨텐츠의 z-index 추가 */
