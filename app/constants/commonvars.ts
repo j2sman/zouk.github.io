@@ -67,6 +67,10 @@ export const MAP_ICONS = {
     icon: "i-simple-icons-google",
     color: "blue",
   },
+  kakao: {
+    icon: "i-simple-icons-kakao",
+    color: "yellow",
+  },
 };
 
 export const locationMapping = {
