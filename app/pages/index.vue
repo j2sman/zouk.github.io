@@ -38,13 +38,13 @@
 
 <script setup>
 import { INDEX_BACKGROUND_VIDEO, CALENDAR_IDS } from "~/constants/commonvars";
-import { IS_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
+import { IS_INDEX_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
 import { getEmbedUrl, getCalendarUrl } from "~/utils/media";
 const { t, locale } = useI18n();
 const colorMode = useColorMode();
 
 const backgroundVideo = ref(INDEX_BACKGROUND_VIDEO);
-const isYoutubeVideo = ref(IS_YOUTUBE_BACKGROUND_VIDEO);
+const isYoutubeVideo = ref(IS_INDEX_YOUTUBE_BACKGROUND_VIDEO);
 const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
 
 const calendarUrl = getCalendarUrl(CALENDAR_IDS, colorMode, locale.value);
@@ -92,7 +92,7 @@ useHead({
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6); /* 여기서 투명도 조절 (0.2 = 60% 투명) */
+  background: rgba(0, 0, 0, 0.7); /* 여기서 투명도 조절 (0.2 = 60% 투명) */
 }
 
 .video-background video,

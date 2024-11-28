@@ -1,7 +1,17 @@
 <script setup>
-import { Location } from "~/database/clubinfo";
+import { Location, UrlType } from "~/database/clubinfo";
 import * as d3 from "d3";
-import { VIDEO_OPACITY, QNA_URL } from "~/constants/commonvars";
+import {
+  CLUBINFO_BACKGROUND_VIDEO,
+  VIDEO_OPACITY,
+  QNA_URL,
+  locationMapping,
+  SOCIAL_ICONS,
+} from "~/constants/commonvars";
+import {
+  getLocationKey,
+  IS_CLUBINFO_YOUTUBE_BACKGROUND_VIDEO,
+} from "~/constants/commoncomputed";
 import { loadKoreaMap } from "~/utils/map";
 import {
   getMediaType,
@@ -9,20 +19,19 @@ import {
   getEmbedUrl,
   getUrlByType,
 } from "~/utils/media";
-import { UrlType } from "~/database/clubinfo";
 import { getSocialMediaLinks, getTranslatedText } from "~/utils/media";
-import { SOCIAL_ICONS } from "~/constants/commonvars";
+import clublistmodal from "~/components/clublistmodal.vue";
 
 const { t, locale } = useI18n();
 const clubStore = useClubStore();
 const { $device } = useNuxtApp();
 
+const backgroundVideo = ref(CLUBINFO_BACKGROUND_VIDEO);
+const isYoutubeVideo = ref(IS_CLUBINFO_YOUTUBE_BACKGROUND_VIDEO);
+const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
+
 // locale이 준비되었는지 확인하는 computed 속성 추가
 const isLocaleReady = computed(() => !!locale.value);
-
-// 비디오 재생 관리를 위한 ref 추가
-const videoRefs = ref({});
-const iframeRefs = ref({});
 
 // 지도 관련 상태 추가
 const selectedRegion = ref(null);
@@ -31,60 +40,9 @@ const mapContainer = ref(null);
 // 클럽 목록 표시 상태 추가
 const showClubList = ref(false);
 
-// getTranslatedText 호출 시 안전하게 처리
-const safeGetTranslatedText = (club, field) => {
-  if (!isLocaleReady.value) return "";
-  return getTranslatedText(club, field, locale.value);
-};
-
 // 컴포넌트 마운트 시 클럽 데이터 가져오기
 onBeforeMount(() => {
   clubStore.fetchClubs();
-});
-
-// 지역별로 클럽 그룹화
-const clubsByLocation = computed(() => {
-  const grouped = {};
-  Object.values(Location).forEach((location) => {
-    grouped[location] = clubStore.totalClubs.filter((club) => {
-      const normalizedClubLocation = String(club.location).trim().toLowerCase();
-      const normalizedLocation = String(location).trim().toLowerCase();
-
-      // if (import.meta.dev) {
-      //   console.log(
-      //     `Comparing - Club: "${normalizedClubLocation}", Location: "${normalizedLocation}"`
-      //   );
-      // }
-
-      return normalizedClubLocation === normalizedLocation;
-    });
-  });
-
-  // if (import.meta.dev) {
-  //   console.log("Grouped clubs:", grouped);
-  // }
-
-  return grouped;
-});
-
-const getLocationKey = (propertyName) => {
-  return Object.entries(locationMapping.value).find(
-    ([_, value]) => value.ko === propertyName || value.en === propertyName
-  )?.[0];
-};
-
-// 필터링된 클럽 목록
-const filteredClubs = computed(() => {
-  if (!selectedRegion.value) return clubsByLocation;
-  const locationKey = getLocationKey(selectedRegion.value);
-  // if (import.meta.dev) {
-  //   console.log(
-  //     `locationKey : ${locationKey}, filteredClubs : ${JSON.stringify(
-  //       clubsByLocation.value[locationKey]
-  //     )}`
-  //   );
-  // }
-  return clubsByLocation.value[locationKey] || [];
 });
 
 // 지도 초기화 함수
@@ -176,8 +134,7 @@ const initMap = async () => {
       .text((d) => {
         const locationKey = getLocationKey(d.properties.name);
         return (
-          locationMapping.value[locationKey]?.[locale.value] ||
-          d.properties.name
+          locationMapping[locationKey]?.[locale.value] || d.properties.name
         );
       })
       .attr("font-size", "14px")
@@ -215,106 +172,6 @@ onMounted(() => {
   });
 });
 
-// Intersection Observer 설정
-onMounted(() => {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        const elementId = entry.target.dataset.clubId;
-        const video = videoRefs.value[elementId];
-        const iframe = iframeRefs.value[elementId];
-
-        if (video) {
-          if (entry.isIntersecting) {
-            video.play().catch((error) => {
-              console.warn("비디오 자동 재생 실패:", error);
-            });
-          } else {
-            video.pause();
-          }
-        }
-
-        if (iframe) {
-          if (entry.isIntersecting) {
-            iframe.src = iframe.dataset.src;
-          } else {
-            iframe.src = "";
-          }
-        }
-      });
-    },
-    { threshold: 0.1 }
-  );
-
-  // 모든 비디오와 iframe 요소 찰 시작
-  setTimeout(() => {
-    [
-      ...Object.values(videoRefs.value),
-      ...Object.values(iframeRefs.value),
-    ].forEach((element) => {
-      if (element && element.parentElement) {
-        observer.observe(element.parentElement);
-      }
-    });
-  }, 100);
-
-  // 컴포넌트 언마운트 시 observer 정리
-  onUnmounted(() => {
-    observer.disconnect();
-  });
-});
-
-const locationMapping = computed(() => ({
-  [Location.seoul]: {
-    ko: "서울특별시",
-    en: "Seoul",
-  },
-  [Location.gyeonggi]: {
-    ko: "경기도",
-    en: "Gyeonggi",
-  },
-  [Location.incheon]: {
-    ko: "인천광역시",
-    en: "Incheon",
-  },
-  [Location.gangwon]: {
-    ko: "강원도",
-    en: "Gangwon",
-  },
-  [Location.chungbuk]: {
-    ko: "충청북도",
-    en: "North Chungcheong",
-  },
-  [Location.chungnam]: {
-    ko: "충청남도",
-    en: "South Chungcheong",
-  },
-  [Location.busan]: {
-    ko: "부산광역시",
-    en: "Busan",
-  },
-  [Location.daegu]: {
-    ko: "대구광역시",
-    en: "Gwangju",
-  },
-  [Location.daejeon]: {
-    ko: "대전광역시",
-    en: "Daejeon",
-  },
-  [Location.ulsan]: {
-    ko: "울산광역시",
-    en: "Ulsan",
-  },
-  [Location.sejong]: {
-    ko: "세종특별자치시",
-    en: "Sejong",
-  },
-  [Location.jeju]: {
-    ko: "제주특별자치도",
-    en: "Jeju",
-  },
-}));
-
 const labelOffsets = {
   [Location.seoul]: [0, 0],
   [Location.gyeonggi]: [0, -20],
@@ -340,39 +197,29 @@ const handleRegionClick = (regionName) => {
   selectedRegion.value = regionName;
   showClubList.value = true;
 };
-
-// 지역 이름을 현재 locale에 맞게 변환하는 computed 속성 추가
-const localizedSelectedRegion = computed(() => {
-  if (!selectedRegion.value) return "";
-  const locationKey = getLocationKey(selectedRegion.value);
-  return (
-    locationMapping.value[locationKey]?.[locale.value] || selectedRegion.value
-  );
-});
-
-// Add socialIcons ref
-const socialIcons = ref(SOCIAL_ICONS);
-
-// Add clubMediaTypes computed property from clubInfo.vue
-const clubBackgroundMediaTypes = computed(() => {
-  const types = {};
-  clubStore.totalClubs.forEach((club) => {
-    try {
-      const backgroundUrl = getUrlByType(club.urls, UrlType.background);
-      types[club.id] = getMediaType(backgroundUrl);
-    } catch (error) {
-      console.error("클럽 미디어 타입 확인 중 오류:", error, {
-        clubId: club.id,
-      });
-      types[club.id] = "none";
-    }
-  });
-  return types;
-});
 </script>
 
 <template>
   <div v-if="isLocaleReady" class="container mx-auto px-4 py-8">
+    <div class="video-background">
+      <iframe
+        v-if="isYoutubeVideo"
+        :src="youtubeEmbedUrl"
+        class="absolute inset-0 w-full h-full"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
+      <video v-else autoplay muted loop preload="none">
+        <source :src="backgroundVideo" type="video/mp4" />
+      </video>
+    </div>
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-4xl font-bold">
+        {{ $t("schedule.title") }}
+      </h1>
+    </div>
+
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-bold">{{ $t("clubs.title") }}</h1>
       <UButton
@@ -395,108 +242,21 @@ const clubBackgroundMediaTypes = computed(() => {
     </div>
 
     <!-- 클럽 목록 모달 -->
-    <ClientOnly>
-      <UModal v-model="showClubList">
-        <UCard>
-          <template #header>
-            <div class="flex justify-between items-center">
-              <h2 class="text-2xl font-semibold">
-                {{ localizedSelectedRegion }}
-              </h2>
-              <UButton
-                icon="i-heroicons-x-mark"
-                color="gray"
-                variant="ghost"
-                @click="showClubList = false"
-              />
-            </div>
-          </template>
-
-          <div class="club-list-container">
-            <ULandingHero
-              v-for="club in filteredClubs"
-              :key="club.id"
-              size="sm"
-              class="club-item mb-4"
-              :ui="{
-                background: getBackgroundConfig(
-                  getUrlByType(club.urls, UrlType.background)
-                ),
-              }"
-            >
-              <!-- video background -->
-              <video
-                v-if="clubBackgroundMediaTypes[club.id] === 'video'"
-                :ref="(el) => (videoRefs[club.id] = el)"
-                :data-club-id="club.id"
-                class="video-background"
-                :style="`opacity: ${VIDEO_OPACITY}%`"
-                muted
-                loop
-                playsinline
-              >
-                <source
-                  :src="getUrlByType(club.urls, UrlType.background)"
-                  type="video/mp4"
-                />
-              </video>
-
-              <!-- iframe background -->
-              <iframe
-                v-if="
-                  ['youtube', 'instagram'].includes(
-                    clubBackgroundMediaTypes[club.id]
-                  )
-                "
-                :ref="(el) => (iframeRefs[club.id] = el)"
-                :data-club-id="club.id"
-                :src="getEmbedUrl(getUrlByType(club.urls, UrlType.background))"
-                class="video-background"
-                :style="`opacity: ${VIDEO_OPACITY}%`"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-              />
-
-              <template #title>
-                {{ safeGetTranslatedText(club, "club_name") }}
-              </template>
-              <template #description>
-                {{ safeGetTranslatedText(club, "description") }}
-              </template>
-              <template #links>
-                <UButton
-                  v-for="url in getSocialMediaLinks(
-                    club.urls,
-                    $device.isMobile
-                  )"
-                  :key="url.type"
-                  :icon="socialIcons[url.type].icon"
-                  :color="socialIcons[url.type].color"
-                  :to="url.value"
-                  target="_blank"
-                  size="lg"
-                >
-                  {{ url.additional_info }}
-                </UButton>
-              </template>
-            </ULandingHero>
-          </div>
-        </UCard>
-      </UModal>
-    </ClientOnly>
+    <clublistmodal
+      v-model:showClubList="showClubList"
+      :selectedRegion="selectedRegion"
+    />
   </div>
 </template>
 
 <style scoped>
 .video-background {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
-  pointer-events: none;
+  z-index: -1;
   overflow: hidden;
 }
 
@@ -507,96 +267,17 @@ const clubBackgroundMediaTypes = computed(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  z-index: 0;
-  pointer-events: none;
+  background: rgba(0, 0, 0, 0.7); /* 여기서 투명도 조절 (0.2 = 60% 투명) */
 }
 
 .video-background video,
 .video-background iframe {
-  position: absolute;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  position: absolute;
   top: 0;
   left: 0;
   transform: none;
-  z-index: 0;
-}
-
-/* 지도 컨테이너 스타일 추가 */
-svg {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-.region {
-  cursor: pointer;
-  transition: fill 0.2s;
-}
-
-.region:hover {
-  fill: #bbb;
-}
-
-.region.selected {
-  fill: #666;
-}
-
-.region.inactive {
-  cursor: default;
-  pointer-events: none;
-}
-
-.region.active:hover {
-  fill: #bbb;
-}
-
-.region-label {
-  user-select: none;
-  font-weight: 600;
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
-    1px 1px 0 #fff;
-  cursor: pointer;
-}
-
-:deep(.modal-container) {
-  max-width: 90vw;
-  width: 1200px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-:deep(.modal-card) {
-  max-height: 100%;
-}
-
-.club-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-}
-
-.club-item {
-  width: 100%;
-}
-
-/* 컨텐츠의 z-index 추가 */
-:deep(.landing-hero-content) {
-  position: relative;
-  z-index: 3;
-  opacity: 1;
-}
-
-/* UButton이 클릭 가능하도록 z-index 추가 */
-:deep(.u-button) {
-  position: relative;
-  z-index: 4;
-  pointer-events: auto;
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 1);
-  backdrop-filter: blur(4px);
 }
 </style>
