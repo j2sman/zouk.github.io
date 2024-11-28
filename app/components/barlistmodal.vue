@@ -17,7 +17,9 @@ const props = defineProps({
 
 const emit = defineEmits(["update:showBarList"]);
 
-const { locale } = useI18n();
+const toast = useToast();
+const { copy } = useClipboard();
+const { t, locale } = useI18n();
 const { $device } = useNuxtApp();
 const barStore = useBarStore();
 
@@ -85,8 +87,24 @@ const filteredBars = computed(() => {
             class="bar-item"
           >
             <!-- address 정보 추가 -->
-            <div class="text-base text-gray-600 mb-2">
+            <div class="text-base text-gray-600 mb-2 flex items-center gap-2">
               {{ safeGetTranslatedText(bar, "address") }}
+              <UButton
+                icon="i-heroicons-clipboard"
+                color="gray"
+                variant="ghost"
+                size="xs"
+                @click="
+                  () => {
+                    copy(safeGetTranslatedText(bar, 'address'));
+                    toast.add({
+                      title: t('bars.addressCopied'),
+                      icon: 'i-heroicons-clipboard-document-check',
+                      timeout: 2000,
+                    });
+                  }
+                "
+              />
             </div>
             <template #footer>
               <div class="flex gap-2">
