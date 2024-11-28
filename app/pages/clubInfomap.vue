@@ -120,11 +120,6 @@ const initMap = async () => {
         const regionData = labelOffsets[locationKey];
         const centroid = path.centroid(d);
         const offset = regionData ?? [0, 0];
-        // if (import.meta.dev) {
-        //   console.log(
-        //     `regionData : ${JSON.stringify(regionData)}, offset: ${offset}`
-        //   );
-        // }
         return `translate(${centroid[0] + offset[0]}, ${
           centroid[1] + offset[1]
         })`;
@@ -138,12 +133,13 @@ const initMap = async () => {
         );
       })
       .attr("font-size", "14px")
-      .attr("fill", "#000")
+      .attr("fill", "#333333")
       .attr("stroke", "#ffffff")
-      .attr("stroke-width", "0.5px")
+      .attr("stroke-width", "2px")
       .attr("paint-order", "stroke")
-      .style("font-weight", "600")
+      .style("font-weight", "700")
       .style("cursor", "pointer")
+      .style("text-shadow", "2px 2px 4px rgba(0,0,0,0.2)")
       .attr("pointer-events", "all")
       .on("click", (event, d) => {
         handleRegionClick(d.properties.name);
