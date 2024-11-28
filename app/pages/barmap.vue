@@ -34,7 +34,11 @@ onBeforeMount(() => {
 // 지도 초기화 함수
 const initMap = async () => {
   const containerWidth = mapContainer.value.clientWidth;
-  const containerHeight = window.innerHeight * 0.7;
+  const containerHeight = $device.isMobile
+    ? window.innerHeight * 0.9
+    : window.innerHeight * 0.7;
+
+  const mapScale = $device.isMobile ? containerWidth * 7.5 : containerWidth * 6;
 
   const svg = d3
     .select(mapContainer.value)
@@ -49,8 +53,8 @@ const initMap = async () => {
 
     const projection = d3
       .geoMercator()
-      .center([127.5, 36])
-      .scale(containerWidth * 5)
+      .center([127.5, 35.5])
+      .scale(mapScale)
       .translate([containerWidth / 2, containerHeight / 2]);
 
     const path = d3.geoPath().projection(projection);
@@ -253,5 +257,13 @@ const handleRegionClick = (regionName) => {
     rgba(255, 255, 255, 0.2) 100%
   );
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 모바일 환경을 위한 스타일 추가 */
+@media (max-width: 768px) {
+  .map-container {
+    padding: 1rem;
+    margin: -1rem;
+  }
 }
 </style>

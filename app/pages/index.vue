@@ -48,9 +48,13 @@ onBeforeMount(() => {
 
 // 지도 초기화 함수
 const initMap = async () => {
-  // 컨테이너의 실제 크기를 가져옵니다
   const containerWidth = mapContainer.value.clientWidth;
-  const containerHeight = window.innerHeight * 0.7; // 화면 높이의 70% 사용
+  const containerHeight = $device.isMobile
+    ? window.innerHeight * 0.9
+    : window.innerHeight * 0.7;
+
+  // 지도 스케일 조정
+  const mapScale = $device.isMobile ? containerWidth * 7.5 : containerWidth * 6;
 
   const svg = d3
     .select(mapContainer.value)
@@ -61,14 +65,12 @@ const initMap = async () => {
     .style("background", "transparent");
 
   try {
-    // 압축된 GeoJSON 데이터 로드
     const koreaMap = await loadKoreaMap();
 
-    // 지도 프로젝션 설정 - 크기에 맞게 조정
     const projection = d3
       .geoMercator()
-      .center([127.5, 36])
-      .scale(containerWidth * 5) // 컨테이너 크기에 비례하여 스케일 조정
+      .center([127.5, 35.5]) // 중심점 조정
+      .scale(mapScale) // 스케일 조정
       .translate([containerWidth / 2, containerHeight / 2]);
 
     const path = d3.geoPath().projection(projection);
