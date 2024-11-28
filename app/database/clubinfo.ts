@@ -40,6 +40,13 @@ export enum Location {
   jeju = "Jeju",
 }
 
+export interface CalendarList {
+  id: string;
+  calendar_id: string;
+  enabled: boolean;
+  created_at: string;
+}
+
 export interface ClubUrl {
   id: string;
   club_id: string;
@@ -71,6 +78,11 @@ export interface ClubInfoExt extends ClubInfo {
 }
 
 // 응답 타입 정의
+export interface CalendarListResponse {
+  data: CalendarList[] | null;
+  error: Error | null;
+}
+
 export interface ClubInfoExtResponse {
   data: ClubInfoExt | null;
   error: Error | null;
@@ -83,12 +95,28 @@ export interface ClubInfoExtListResponse {
 
 export class ClubInfoExtService {
   private readonly supabase: SupabaseClient;
+  private readonly calendarTableName = "calendarlist".toLowerCase();
   private readonly clubTableName = "clubinfo".toLowerCase();
   private readonly i18nTableName = "clubinfoi18n".toLowerCase();
   private readonly urlTableName = "cluburls".toLowerCase();
 
   constructor(supabase: SupabaseClient) {
     this.supabase = supabase;
+  }
+
+  async getCalendarList(): Promise<CalendarListResponse> {
+    try {
+      const { data, error } = await this.supabase
+        .from(this.calendarTableName)
+        .select("*");
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error fetching calendar list:", error);
+      return { data: [], error: error as Error };
+    }
   }
 
   /**

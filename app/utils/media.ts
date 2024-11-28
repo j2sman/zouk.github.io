@@ -4,11 +4,12 @@ import { UrlType } from "~/database/clubinfo";
 
 // iframe URL computed 속성
 export const getCalendarUrl = (
+  mainCalendarId: string,
   calendarIds: string[],
   colorMode: any,
   localeValue: string
 ) => {
-  const calendarsParam = calendarIds
+  const calendarsParam = [mainCalendarId, ...calendarIds]
     .map((id) => `src=${encodeURIComponent(id)}`)
     .join("&");
 
@@ -19,7 +20,12 @@ export const getCalendarUrl = (
       : "0"
     : "0";
 
-  return `https://calendar.google.com/calendar/embed?${calendarsParam}&ctz=Asia%2FSeoul&mode=MONTH&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=1&showTz=0&hl=${localeValue}&wkst=1&bgcolor=%23ffffff&themeId=${themeValue}`;
+  let strUrl = `https://calendar.google.com/calendar/embed?${calendarsParam}&ctz=Asia%2FSeoul&mode=MONTH&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=1&showTz=0&hl=${localeValue}&wkst=1&bgcolor=%23ffffff&themeId=${themeValue}`;
+  if (import.meta.dev) {
+    console.log(`calendarUrl : ${strUrl}`);
+  }
+
+  return strUrl;
 };
 
 // URL에서 YouTube 비디오 ID 추출

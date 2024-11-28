@@ -17,7 +17,7 @@ export const CLUBINFO_BACKGROUND_VIDEO =
   "https://www.youtube.com/watch?v=7jU-h-ctxVI";
 
 // 캘린더 ID 목록
-export const CALENDAR_IDS = ["zoukkorea@gmail.com"];
+export const MAIN_CALENDAR_ID = "zoukkorea@gmail.com";
 
 export const SOCIAL_ICONS = {
   homepage: {
