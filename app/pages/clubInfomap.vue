@@ -17,6 +17,9 @@ const { t, locale } = useI18n();
 const clubStore = useClubStore();
 const { $device } = useNuxtApp();
 
+// locale이 준비되었는지 확인하는 computed 속성 추가
+const isLocaleReady = computed(() => !!locale.value);
+
 // 비디오 재생 관리를 위한 ref 추가
 const videoRefs = ref({});
 const iframeRefs = ref({});
@@ -27,6 +30,12 @@ const mapContainer = ref(null);
 
 // 클럽 목록 표시 상태 추가
 const showClubList = ref(false);
+
+// getTranslatedText 호출 시 안전하게 처리
+const safeGetTranslatedText = (club, field) => {
+  if (!isLocaleReady.value) return "";
+  return getTranslatedText(club, field, locale.value);
+};
 
 // 컴포넌트 마운트 시 클럽 데이터 가져오기
 onBeforeMount(() => {
@@ -58,15 +67,19 @@ const clubsByLocation = computed(() => {
   return grouped;
 });
 
+const getLocationKey = (propertyName) => {
+  return Object.entries(locationMapping.value).find(
+    ([_, value]) => value.ko === propertyName || value.en === propertyName
+  )?.[0];
+};
+
 // 필터링된 클럽 목록
 const filteredClubs = computed(() => {
   if (!selectedRegion.value) return clubsByLocation;
-  const locationKey = Object.entries(locationMapping).find(
-    ([_, value]) => value === selectedRegion.value
-  )?.[0];
+  const locationKey = getLocationKey(selectedRegion.value);
   // if (import.meta.dev) {
   //   console.log(
-  //     `locationKey : ${locationKey}, clubs : ${JSON.stringify(
+  //     `locationKey : ${locationKey}, filteredClubs : ${JSON.stringify(
   //       clubsByLocation.value[locationKey]
   //     )}`
   //   );
@@ -108,28 +121,21 @@ const initMap = async () => {
       .append("path")
       .attr("d", path)
       .attr("class", (d) => {
-        // 지역 이름으로 Location enum 값 찾기
-        const locationKey = Object.entries(locationMapping).find(
-          ([_, value]) => value === d.properties.name
-        )?.[0];
+        const locationKey = getLocationKey(d.properties.name);
         const hasClubs = clubStore.hasClubsInLocation(locationKey);
         return `region ${
           selectedRegion.value === d.properties.name ? "selected" : ""
         } ${hasClubs ? "active" : "inactive"}`;
       })
       .attr("fill", (d) => {
-        const locationKey = Object.entries(locationMapping).find(
-          ([_, value]) => value === d.properties.name
-        )?.[0];
+        const locationKey = getLocationKey(d.properties.name);
         return clubStore.hasClubsInLocation(locationKey)
           ? "#e4e4e4"
           : "#f5f5f5";
       })
       .attr("stroke", "#fff")
       .on("click", (event, d) => {
-        const locationKey = Object.entries(locationMapping).find(
-          ([_, value]) => value === d.properties.name
-        )?.[0];
+        const locationKey = getLocationKey(d.properties.name);
         const hasClubs = clubStore.hasClubsInLocation(locationKey);
         if (hasClubs) {
           handleRegionClick(d.properties.name);
@@ -144,20 +150,15 @@ const initMap = async () => {
       // 클럽이 있는 지역만 표시
       .data(
         koreaMap.features.filter((d) => {
-          const locationKey = Object.entries(locationMapping).find(
-            ([_, value]) => value === d.properties.name
-          )?.[0];
-          const hasClubs = clubStore.hasClubsInLocation(locationKey);
-          return hasClubs;
+          const locationKey = getLocationKey(d.properties.name);
+          return clubStore.hasClubsInLocation(locationKey);
         })
       )
       .enter()
       .append("text")
       .attr("class", "region-label")
       .attr("transform", (d) => {
-        const locationKey = Object.entries(locationMapping).find(
-          ([_, value]) => value === d.properties.name
-        )?.[0];
+        const locationKey = getLocationKey(d.properties.name);
         const regionData = labelOffsets[locationKey];
         const centroid = path.centroid(d);
         const offset = regionData ?? [0, 0];
@@ -172,7 +173,13 @@ const initMap = async () => {
       })
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
-      .text((d) => d.properties.name)
+      .text((d) => {
+        const locationKey = getLocationKey(d.properties.name);
+        return (
+          locationMapping.value[locationKey]?.[locale.value] ||
+          d.properties.name
+        );
+      })
       .attr("font-size", "14px")
       .attr("fill", "#000")
       .attr("stroke", "#ffffff")
@@ -257,25 +264,56 @@ onMounted(() => {
   });
 });
 
-const locationMapping = {
-  [Location.seoul]: "서울특별시",
-  [Location.gyeonggi]: "경기도",
-  [Location.incheon]: "인천광역시",
-  [Location.gangwon]: "강원도",
-  [Location.chungbuk]: "충청북도",
-  [Location.chungnam]: "충청남도",
-  [Location.busan]: "부산광역시",
-  [Location.daegu]: "대구광역시",
-  [Location.gwangju]: "광주광역시",
-  [Location.daejeon]: "대전광역시",
-  [Location.ulsan]: "울산광역시",
-  [Location.sejong]: "세종특별자치시",
-  [Location.jeonbuk]: "전라북도",
-  [Location.jeonnam]: "전라남도",
-  [Location.gyeongbuk]: "경상북도",
-  [Location.gyeongnam]: "경상남도",
-  [Location.jeju]: "제주특별자치도",
-};
+const locationMapping = computed(() => ({
+  [Location.seoul]: {
+    ko: "서울특별시",
+    en: "Seoul",
+  },
+  [Location.gyeonggi]: {
+    ko: "경기도",
+    en: "Gyeonggi",
+  },
+  [Location.incheon]: {
+    ko: "인천광역시",
+    en: "Incheon",
+  },
+  [Location.gangwon]: {
+    ko: "강원도",
+    en: "Gangwon",
+  },
+  [Location.chungbuk]: {
+    ko: "충청북도",
+    en: "North Chungcheong",
+  },
+  [Location.chungnam]: {
+    ko: "충청남도",
+    en: "South Chungcheong",
+  },
+  [Location.busan]: {
+    ko: "부산광역시",
+    en: "Busan",
+  },
+  [Location.daegu]: {
+    ko: "대구광역시",
+    en: "Gwangju",
+  },
+  [Location.daejeon]: {
+    ko: "대전광역시",
+    en: "Daejeon",
+  },
+  [Location.ulsan]: {
+    ko: "울산광역시",
+    en: "Ulsan",
+  },
+  [Location.sejong]: {
+    ko: "세종특별자치시",
+    en: "Sejong",
+  },
+  [Location.jeju]: {
+    ko: "제주특별자치도",
+    en: "Jeju",
+  },
+}));
 
 const labelOffsets = {
   [Location.seoul]: [0, 0],
@@ -300,8 +338,17 @@ const labelOffsets = {
 // 지도 클릭 핸들러 수정
 const handleRegionClick = (regionName) => {
   selectedRegion.value = regionName;
-  showClubList.value = true; // 클럽 목록 표시
+  showClubList.value = true;
 };
+
+// 지역 이름을 현재 locale에 맞게 변환하는 computed 속성 추가
+const localizedSelectedRegion = computed(() => {
+  if (!selectedRegion.value) return "";
+  const locationKey = getLocationKey(selectedRegion.value);
+  return (
+    locationMapping.value[locationKey]?.[locale.value] || selectedRegion.value
+  );
+});
 
 // Add socialIcons ref
 const socialIcons = ref(SOCIAL_ICONS);
@@ -325,7 +372,7 @@ const clubBackgroundMediaTypes = computed(() => {
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div v-if="isLocaleReady" class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-bold">{{ $t("clubs.title") }}</h1>
       <UButton
@@ -353,7 +400,9 @@ const clubBackgroundMediaTypes = computed(() => {
         <UCard>
           <template #header>
             <div class="flex justify-between items-center">
-              <h2 class="text-2xl font-semibold">{{ selectedRegion }}</h2>
+              <h2 class="text-2xl font-semibold">
+                {{ localizedSelectedRegion }}
+              </h2>
               <UButton
                 icon="i-heroicons-x-mark"
                 color="gray"
@@ -410,10 +459,10 @@ const clubBackgroundMediaTypes = computed(() => {
               />
 
               <template #title>
-                {{ getTranslatedText(club, "club_name") }}
+                {{ safeGetTranslatedText(club, "club_name") }}
               </template>
               <template #description>
-                {{ getTranslatedText(club, "description") }}
+                {{ safeGetTranslatedText(club, "description") }}
               </template>
               <template #links>
                 <UButton
