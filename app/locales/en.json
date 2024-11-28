@@ -13,10 +13,8 @@
     "clubInfomap": "Club Info"
   },
   "schedule": {
-    "title": "Class Schedule",
+    "title": "Schedule",
     "description": "Google calendar will be connected.",
-    "viewNotionSchedule": "View Google Calendar",
-    "onlineClasses": "Online Classes",
     "workshopAndFestival": "Workshop & Festival",
     "weekdays": {
       "monday": "Monday",

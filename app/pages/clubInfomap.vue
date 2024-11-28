@@ -215,12 +215,6 @@ const handleRegionClick = (regionName) => {
       </video>
     </div>
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl font-bold">
-        {{ $t("schedule.title") }}
-      </h1>
-    </div>
-
-    <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-bold">{{ $t("clubs.title") }}</h1>
       <UButton
         icon="i-ri-kakao-talk-fill"

@@ -15,8 +15,6 @@
   "schedule": {
     "title": "수업 일정",
     "description": "Google 캘린더.",
-    "viewNotionSchedule": "Google 캘린더",
-    "onlineClasses": "온라인 수업",
     "workshopAndFestival": "워크샵 & 페스티벌",
     "weekdays": {
       "monday": "월요일",
