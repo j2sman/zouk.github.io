@@ -35,6 +35,7 @@
   "bars": {
     "title": "라틴바 위치",
     "select": "라틴바 선택",
-    "addressCopied": "주소가 복사되었습니다."
+    "addressCopied": "주소가 복사되었습니다.",
+    "searchPlaceholder": "바 검색"
   }
 }

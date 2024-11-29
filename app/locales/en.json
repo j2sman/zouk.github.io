@@ -35,6 +35,7 @@
   "bars": {
     "title": "Latin Bar Locations",
     "select": "Select Latin Bar",
-    "addressCopied": "Address copied."
+    "addressCopied": "Address copied.",
+    "searchPlaceholder": "Search for bars"
   }
 }

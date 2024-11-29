@@ -4,8 +4,9 @@ export default defineNuxtConfig({
   ssr: true,
   modules: [
     "@nuxt/eslint",
-    "@nuxt/ui",
+    "@nuxt/content",
     "@nuxtjs/i18n",
+    "@nuxt/ui",
     "@vueuse/nuxt",
     "@nuxtjs/supabase",
     "@pinia/nuxt",

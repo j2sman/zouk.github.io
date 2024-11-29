@@ -1,6 +1,9 @@
 <script setup>
-import { AddressType } from "~/database/clubinfo";
-import { LOCATION_NAME_MAPPING, MAP_ICONS } from "~/constants/commonvars";
+import {
+  LOCATION_NAME_MAPPING,
+  MAP_ICONS,
+  CHOSUNG_MAP,
+} from "~/constants/commonvars";
 import { getLocationKey } from "~/constants/commoncomputed";
 import { getTranslatedText } from "~/utils/media";
 
@@ -40,15 +43,73 @@ const localizedSelectedRegion = computed(() => {
   );
 });
 
-// 필터링된 바 목록
+// 검색어를 위한 ref 추가
+const searchQuery = ref("");
+
+// 검색 입력창을 위한 ref 추가
+const searchInput = ref(null);
+
+// showBarList가 변경될 때 searchQuery 초기화 (false -> true 일 때만)
+watch(
+  () => props.showBarList,
+  (newValue, oldValue) => {
+    if (newValue && !oldValue) {
+      searchQuery.value = "";
+      // nextTick을 사용하여 DOM이 업데이트된 후 포커스
+      nextTick(() => {
+        searchInput.value?.focus();
+      });
+    }
+  }
+);
+
+// 초성 검색을 위한 함수
+const matchesChosung = (text, query) => {
+  for (const [chosung, pattern] of Object.entries(CHOSUNG_MAP)) {
+    query = query.replace(chosung, pattern.source);
+  }
+  try {
+    return new RegExp(query).test(text);
+  } catch {
+    return false;
+  }
+};
+
+// filteredBars computed 속성 수정
 const filteredBars = computed(() => {
-  if (!props.selectedRegion) return barStore.totalBars;
-  const locationKey = getLocationKey(props.selectedRegion);
-  return barStore.totalBars.filter((bar) => {
-    const normalizedBarLocation = String(bar.location).trim().toLowerCase();
-    const normalizedLocation = String(locationKey).trim().toLowerCase();
-    return normalizedBarLocation === normalizedLocation;
-  });
+  let bars = props.selectedRegion
+    ? barStore.totalBars.filter((bar) => {
+        const normalizedBarLocation = String(bar.location).trim().toLowerCase();
+        const normalizedLocation = String(getLocationKey(props.selectedRegion))
+          .trim()
+          .toLowerCase();
+        return normalizedBarLocation === normalizedLocation;
+      })
+    : barStore.totalBars;
+
+  // 검색어로 추가 필터링
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    bars = bars.filter((bar) => {
+      const name = safeGetTranslatedText(bar, "name").toLowerCase();
+      const description = safeGetTranslatedText(
+        bar,
+        "description"
+      ).toLowerCase();
+      const address = safeGetTranslatedText(bar, "address").toLowerCase();
+
+      return (
+        name.includes(query) ||
+        description.includes(query) ||
+        address.includes(query) ||
+        matchesChosung(name, searchQuery.value) ||
+        matchesChosung(description, searchQuery.value) ||
+        matchesChosung(address, searchQuery.value)
+      );
+    });
+  }
+
+  return bars;
 });
 </script>
 
@@ -60,15 +121,25 @@ const filteredBars = computed(() => {
     >
       <UCard>
         <template #header>
-          <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-semibold">
-              {{ localizedSelectedRegion }}
-            </h2>
-            <UButton
-              icon="i-heroicons-x-mark"
-              color="gray"
-              variant="ghost"
-              @click="emit('update:showBarList', false)"
+          <div class="flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+              <h2 class="text-2xl font-semibold">
+                {{ localizedSelectedRegion }}
+              </h2>
+              <UButton
+                icon="i-heroicons-x-mark"
+                color="gray"
+                variant="ghost"
+                @click="emit('update:showBarList', false)"
+              />
+            </div>
+            <!-- 검색 입력창 추가 -->
+            <UInput
+              ref="searchInput"
+              v-model="searchQuery"
+              :placeholder="t('bars.searchPlaceholder')"
+              icon="i-heroicons-magnifying-glass"
+              class="w-full"
             />
           </div>
         </template>
