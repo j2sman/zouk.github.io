@@ -70,6 +70,13 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    preset: "cloudflare-pages-static",
+    prerender: {
+      crawlLinks: true,
+      routes: ["/"],
+      ignore: ["/api/**"], // API 경로 무시
+      failOnError: false, // 프리렌더링 오류 무시
+    },
     routeRules: {
       "/**": {
         headers: {
