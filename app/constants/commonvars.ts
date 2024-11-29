@@ -92,11 +92,11 @@ export const LOCATION_NAME_MAPPING = {
   },
   [Location.chungbuk]: {
     ko: "충청북도",
-    en: "North Chungcheong",
+    en: "Chungbuk",
   },
   [Location.chungnam]: {
     ko: "충청남도",
-    en: "South Chungcheong",
+    en: "Chungnam",
   },
   [Location.busan]: {
     ko: "부산광역시",
@@ -104,6 +104,10 @@ export const LOCATION_NAME_MAPPING = {
   },
   [Location.daegu]: {
     ko: "대구광역시",
+    en: "Daegu",
+  },
+  [Location.gwangju]: {
+    ko: "광주광역시",
     en: "Gwangju",
   },
   [Location.daejeon]: {
@@ -117,6 +121,22 @@ export const LOCATION_NAME_MAPPING = {
   [Location.sejong]: {
     ko: "세종특별자치시",
     en: "Sejong",
+  },
+  [Location.jeonbuk]: {
+    ko: "전라북도",
+    en: "Jeonbuk",
+  },
+  [Location.jeonnam]: {
+    ko: "전라남도",
+    en: "Jeonnam",
+  },
+  [Location.gyeongbuk]: {
+    ko: "경상북도",
+    en: "Gyeongbuk",
+  },
+  [Location.gyeongnam]: {
+    ko: "경상남도",
+    en: "Gyeongnam",
   },
   [Location.jeju]: {
     ko: "제주특별자치도",
