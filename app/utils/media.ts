@@ -55,6 +55,15 @@ export const getInstagramPostId = (url: string | null): string | null => {
   return match ? match[1] : null;
 };
 
+export const getGoogleDriveFileId = (url: string | null): string | null => {
+  if (!url) return null;
+
+  const regExp = /drive.google.com\/file\/d\/([^/?#&]+)/;
+  const match = url.match(regExp);
+
+  return match ? match[1] : null;
+};
+
 // 배경 URL 가져오기 함수 추가
 export const getUrlByType = (urls: any[], type: UrlType): string | null => {
   if (!urls || !Array.isArray(urls)) return null;
@@ -85,10 +94,12 @@ export const getMediaType = (media: string | null | undefined): string => {
 
   try {
     const mediaStr = media.toLowerCase();
-    if (mediaStr.endsWith(".mp4")) return "video";
+    if (mediaStr.endsWith(".mp4") || mediaStr.endsWith(".mkv")) return "video";
     if (mediaStr.includes("youtube.com") || mediaStr.includes("youtu.be"))
       return "youtube";
     if (mediaStr.includes("instagram.com")) return "instagram";
+    if (mediaStr.includes("drive.google.com")) return "googledrive";
+
     return "image";
   } catch (error) {
     console.error("Error in getMediaType:", error, { mediaValue: media });
@@ -109,7 +120,7 @@ export const getBackgroundConfig = (background: string | null) => {
 
     const bgType = getMediaType(background);
 
-    if (["video", "youtube", "instagram"].includes(bgType)) {
+    if (["video", "youtube", "instagram", "googledrive"].includes(bgType)) {
       return baseStyle;
     }
 
@@ -130,7 +141,6 @@ export const getBackgroundConfig = (background: string | null) => {
 export const getEmbedUrl = (background: string | null): string | null => {
   try {
     const bgType = getMediaType(background);
-    //console.log(`bgType: ${bgType}, background: ${JSON.stringify(background)}`);
 
     switch (bgType) {
       case "youtube": {
@@ -142,6 +152,13 @@ export const getEmbedUrl = (background: string | null): string | null => {
       case "instagram": {
         const postId = getInstagramPostId(background);
         return postId ? `https://www.instagram.com/p/${postId}/embed` : null;
+      }
+      case "googledrive": {
+        const fileId = getGoogleDriveFileId(background);
+        let strUrl = fileId
+          ? `https://drive.google.com/file/d/${fileId}/preview`
+          : null;
+        return strUrl;
       }
       case "video":
         return background;

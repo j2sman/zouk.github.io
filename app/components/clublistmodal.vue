@@ -97,10 +97,17 @@ onMounted(() => {
 
         if (video) {
           if (entry.isIntersecting) {
+            // 비디오가 뷰포트에 들어왔을 때
+            video.currentTime = 0; // 처음부터 재생
             video.play().catch((error) => {
               console.warn("비디오 자동 재생 실패:", error);
+              video.muted = true;
+              video.play().catch((retryError) => {
+                console.error("비디오 재생 재시도 실패:", retryError);
+              });
             });
           } else {
+            // 비디오가 뷰포트를 벗어났을 때
             video.pause();
           }
         }
@@ -114,20 +121,19 @@ onMounted(() => {
         }
       });
     },
-    { threshold: 0.1 }
+    {
+      threshold: 0.3, // 임계값 증가
+      rootMargin: "100px", // 관찰 영역 확대
+    }
   );
 
-  // 모든 비디오와 iframe 요소 관찰 시작
-  setTimeout(() => {
-    [
-      ...Object.values(videoRefs.value),
-      ...Object.values(iframeRefs.value),
-    ].forEach((element) => {
-      if (element && element.parentElement) {
-        observer.observe(element.parentElement);
-      }
+  // observer 설정 시점 조정
+  nextTick(() => {
+    const elements = document.querySelectorAll("[data-club-id]");
+    elements.forEach((element) => {
+      observer.observe(element);
     });
-  }, 100);
+  });
 
   // 컴포넌트 언마운트 시 observer 정리
   onUnmounted(() => {
@@ -174,7 +180,7 @@ onMounted(() => {
               <div class="club-media-container">
                 <!-- video background -->
                 <video
-                  v-if="clubBackgroundMediaTypes[club.id] === 'video'"
+                  v-if="['video'].includes(clubBackgroundMediaTypes[club.id])"
                   :ref="(el) => (videoRefs[club.id] = el)"
                   :data-club-id="club.id"
                   class="club-media"
@@ -182,21 +188,24 @@ onMounted(() => {
                   muted
                   loop
                   playsinline
+                  autoplay
+                  preload="auto"
                   controlsList="nodownload nofullscreen noremoteplayback"
                   disablePictureInPicture
                   disableRemotePlayback
-                  controls="false"
+                  :controls="false"
                 >
                   <source
-                    :src="getUrlByType(club.urls, UrlType.background)"
+                    :src="
+                      getEmbedUrl(getUrlByType(club.urls, UrlType.background))
+                    "
                     type="video/mp4"
                   />
                 </video>
-
                 <!-- iframe background -->
                 <iframe
-                  v-if="
-                    ['youtube', 'instagram'].includes(
+                  v-else-if="
+                    ['youtube', 'instagram', 'googledrive'].includes(
                       clubBackgroundMediaTypes[club.id]
                     )
                   "
