@@ -1,14 +1,14 @@
 import {
-  INDEX_BACKGROUND_VIDEO,
+  SCHEDULE_BACKGROUND_VIDEO,
   CLUBINFO_BACKGROUND_VIDEO,
   LOCATION_NAME_MAPPING,
 } from "./commonvars";
 
 // YouTube 비디오 여부 확인
-export const IS_INDEX_YOUTUBE_BACKGROUND_VIDEO = computed(() => {
+export const IS_SCHEDULE_YOUTUBE_BACKGROUND_VIDEO = computed(() => {
   return (
-    INDEX_BACKGROUND_VIDEO.includes("youtube.com") ||
-    INDEX_BACKGROUND_VIDEO.includes("youtu.be")
+    SCHEDULE_BACKGROUND_VIDEO.includes("youtube.com") ||
+    SCHEDULE_BACKGROUND_VIDEO.includes("youtu.be")
   );
 });
 

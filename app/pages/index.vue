@@ -29,7 +29,7 @@ const { $device } = useNuxtApp();
 
 const backgroundVideo = ref(CLUBINFO_BACKGROUND_VIDEO);
 const isYoutubeVideo = ref(IS_CLUBINFO_YOUTUBE_BACKGROUND_VIDEO);
-const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
+const videoEmbedUrl = getEmbedUrl(backgroundVideo.value);
 
 // locale이 준비되었는지 확인하는 computed 속성 추가
 const isLocaleReady = computed(() => !!locale.value);
@@ -182,21 +182,19 @@ const handleRegionClick = (regionName) => {
 
 <template>
   <div v-if="isLocaleReady" class="container mx-auto px-4 py-8">
-    <!--
     <div class="video-background">
       <iframe
         v-if="isYoutubeVideo"
-        :src="youtubeEmbedUrl"
+        :src="videoEmbedUrl"
         class="absolute inset-0 w-full h-full"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
       ></iframe>
       <video v-else autoplay muted loop preload="none">
-        <source :src="backgroundVideo" type="video/mp4" />
+        <source :src="videoEmbedUrl" type="video/mp4" />
       </video>
     </div>
-    -->
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-bold text-white">{{ $t("clubs.title") }}</h1>
       <UButton

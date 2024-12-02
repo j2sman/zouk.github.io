@@ -9,12 +9,16 @@ export const QNA_URL = "https://open.kakao.com/o/sDKuRzAg";
 export const VIDEO_OPACITY = 100;
 
 // 배경 비디오 URL
-export const INDEX_BACKGROUND_VIDEO =
-  "https://www.youtube.com/watch?v=JawTJWFum64";
+// export const SCHEDULE_BACKGROUND_VIDEO =
+//   "https://www.youtube.com/watch?v=JawTJWFum64";
+export const SCHEDULE_BACKGROUND_VIDEO =
+  "https://media.zouk.co.kr/Background/Schedule.mp4";
 
 // 동호회 소개 비디오 URL
+// export const CLUBINFO_BACKGROUND_VIDEO =
+//   "https://www.youtube.com/watch?v=7jU-h-ctxVI";
 export const CLUBINFO_BACKGROUND_VIDEO =
-  "https://www.youtube.com/watch?v=7jU-h-ctxVI";
+  "https://media.zouk.co.kr/Background/ClubInfo.mp4";
 
 // 캘린더 ID 목록
 export const MAIN_CALENDAR_ID = "zoukkorea@gmail.com";

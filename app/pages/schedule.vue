@@ -3,14 +3,14 @@
     <div class="video-background">
       <iframe
         v-if="isYoutubeVideo"
-        :src="youtubeEmbedUrl"
+        :src="videoEmbedUrl"
         class="absolute inset-0 w-full h-full"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
       ></iframe>
       <video v-else autoplay muted loop preload="none">
-        <source :src="backgroundVideo" type="video/mp4" />
+        <source :src="videoEmbedUrl" type="video/mp4" />
       </video>
     </div>
     <div class="flex justify-between items-center mb-8">
@@ -38,18 +38,18 @@
 
 <script setup>
 import {
-  INDEX_BACKGROUND_VIDEO,
+  SCHEDULE_BACKGROUND_VIDEO,
   MAIN_CALENDAR_ID,
 } from "~/constants/commonvars";
-import { IS_INDEX_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
+import { IS_SCHEDULE_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
 import { getEmbedUrl, getCalendarUrl } from "~/utils/media";
 import { useCalendarStore } from "~/stores/calandarStore";
 const { t, locale } = useI18n();
 const colorMode = useColorMode();
 
-const backgroundVideo = ref(INDEX_BACKGROUND_VIDEO);
-const isYoutubeVideo = ref(IS_INDEX_YOUTUBE_BACKGROUND_VIDEO);
-const youtubeEmbedUrl = getEmbedUrl(backgroundVideo.value);
+const backgroundVideo = ref(SCHEDULE_BACKGROUND_VIDEO);
+const isYoutubeVideo = ref(IS_SCHEDULE_YOUTUBE_BACKGROUND_VIDEO);
+const videoEmbedUrl = getEmbedUrl(backgroundVideo.value);
 
 const calendarStore = useCalendarStore();
 // 캘린더 ID들을 저장할 ref 생성
