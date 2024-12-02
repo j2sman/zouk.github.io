@@ -178,18 +178,20 @@ const filteredBars = computed(() => {
               />
             </div>
             <template #footer>
-              <div class="flex gap-2">
-                <UButton
-                  v-for="url in bar.urls"
-                  :key="url.id"
-                  :icon="mapIcons[url.address_type].icon"
-                  :color="mapIcons[url.address_type].color"
-                  :to="url.url_address"
-                  target="_blank"
-                  size="sm"
-                >
-                  {{ url.address_type }}
-                </UButton>
+              <div class="mt-4 text-center space-y-4">
+                <div class="flex flex-wrap justify-center gap-1">
+                  <UButton
+                    v-for="url in bar.urls"
+                    :key="url.id"
+                    :icon="mapIcons[url.address_type].icon"
+                    :color="mapIcons[url.address_type].color"
+                    :to="url.url_address"
+                    target="_blank"
+                    size="sm"
+                  >
+                    {{ url.address_type }}
+                  </UButton>
+                </div>
               </div>
             </template>
           </UPageCard>

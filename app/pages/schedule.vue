@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div class="video-background">
+    <div class="video-background" ref="videoContainer">
       <iframe
         v-if="isYoutubeVideo"
         :src="videoEmbedUrl"
@@ -9,7 +9,14 @@
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
       ></iframe>
-      <video v-else autoplay muted loop preload="none">
+      <video
+        v-else
+        ref="videoElement"
+        :autoplay="isVideoVisible"
+        muted
+        loop
+        preload="none"
+      >
         <source :src="videoEmbedUrl" type="video/mp4" />
       </video>
     </div>
@@ -21,9 +28,7 @@
 
     <!-- 구글 캘린더 임베드 -->
     <ClientOnly>
-      <div
-        class="calendar-container bg-white/5 dark:bg-gray-900/20 rounded-xl p-4"
-      >
+      <div class="calendar-container bg-white/5 dark:bg-gray-900/20 rounded-xl p-4">
         <iframe
           :src="calendarUrl"
           style="border: 0"
@@ -44,6 +49,7 @@ import {
 import { IS_SCHEDULE_YOUTUBE_BACKGROUND_VIDEO } from "~/constants/commoncomputed";
 import { getEmbedUrl, getCalendarUrl } from "~/utils/media";
 import { useCalendarStore } from "~/stores/calandarStore";
+
 const { t, locale } = useI18n();
 const colorMode = useColorMode();
 
@@ -51,8 +57,42 @@ const backgroundVideo = ref(SCHEDULE_BACKGROUND_VIDEO);
 const isYoutubeVideo = ref(IS_SCHEDULE_YOUTUBE_BACKGROUND_VIDEO);
 const videoEmbedUrl = getEmbedUrl(backgroundVideo.value);
 
+// 비디오 관련 refs 추가
+const isVideoVisible = ref(false);
+const videoContainer = ref(null);
+const videoElement = ref(null);
+
+// Intersection Observer 설정
+onMounted(() => {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          isVideoVisible.value = true;
+          if (videoElement.value) {
+            videoElement.value.load();
+          }
+          observer.disconnect(); // 한 번 로드되면 관찰 중단
+        }
+      });
+    },
+    {
+      threshold: 0.1, // 10% 이상 보일 때 로드
+      rootMargin: "50px", // 미리 로드 시작
+    }
+  );
+
+  if (videoContainer.value) {
+    observer.observe(videoContainer.value);
+  }
+
+  // 컴포넌트 언마운트 시 observer 정리
+  onUnmounted(() => {
+    observer.disconnect();
+  });
+});
+
 const calendarStore = useCalendarStore();
-// 캘린더 ID들을 저장할 ref 생성
 const combinedCalendarIds = ref([]);
 
 // 컴포넌트 마운트 시 캘린더 목록 가져오기
@@ -63,7 +103,6 @@ onMounted(async () => {
     console.log(`calendarList : ${JSON.stringify(calendarStore.calendarList)}`);
   }
 
-  // 활성화된 캘린더만 필터링하고 ID 추가
   const enabledCalendarIds =
     calendarStore.calendarList
       ?.filter((calendar) => calendar.enabled)
@@ -72,7 +111,6 @@ onMounted(async () => {
   combinedCalendarIds.value = enabledCalendarIds;
 });
 
-// calendarUrl 생성 시 combinedCalendarIds 사용
 const calendarUrl = computed(() => {
   return getCalendarUrl(
     MAIN_CALENDAR_ID,

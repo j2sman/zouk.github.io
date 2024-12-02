@@ -41,6 +41,41 @@ const mapContainer = ref(null);
 // 클럽 목록 표시 상태 추가
 const showClubList = ref(false);
 
+// 비디오 가시성 상태 추가
+const isVideoVisible = ref(false);
+const videoContainer = ref(null);
+const videoElement = ref(null);
+
+// Intersection Observer 설정
+onMounted(() => {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          isVideoVisible.value = true;
+          if (videoElement.value) {
+            videoElement.value.load();
+          }
+          observer.disconnect(); // 한 번 로드되면 관찰 중단
+        }
+      });
+    },
+    {
+      threshold: 0.1, // 10% 이상 보일 때 로드
+      rootMargin: "50px", // 미리 로드 시작
+    }
+  );
+
+  if (videoContainer.value) {
+    observer.observe(videoContainer.value);
+  }
+
+  // 컴포넌트 언마운트 시 observer 정리
+  onUnmounted(() => {
+    observer.disconnect();
+  });
+});
+
 // 지도 초기화 함수
 const initMap = async () => {
   // mapContainer가 존재하는지 확인
@@ -299,5 +334,20 @@ const handleRegionClick = (regionName) => {
     rgba(255, 255, 255, 0.2) 100%
   );
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 모바일 환경을 위한 스타일 추가 */
+@media (max-width: 768px) {
+  .map-container {
+    padding: 1rem;
+    margin: -1rem;
+  }
+
+  .region-label {
+    font-size: 12px;
+    font-weight: 700;
+    fill: #333333;
+    stroke-width: 1px;
+  }
 }
 </style>

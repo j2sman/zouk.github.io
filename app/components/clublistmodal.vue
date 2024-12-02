@@ -224,21 +224,23 @@ onMounted(() => {
             </template>
 
             <template #footer>
-              <div class="flex gap-2">
-                <UButton
-                  v-for="url in getSocialMediaLinks(
-                    club.urls,
-                    $device.isMobile
-                  )"
-                  :key="url.type"
-                  :icon="socialIcons[url.type].icon"
-                  :color="socialIcons[url.type].color"
-                  :to="url.value"
-                  target="_blank"
-                  size="sm"
-                >
-                  {{ url.additional_info }}
-                </UButton>
+              <div class="mt-4 text-center space-y-4">
+                <div class="flex flex-wrap justify-center gap-2">
+                  <UButton
+                    v-for="url in getSocialMediaLinks(
+                      club.urls,
+                      $device.isMobile
+                    )"
+                    :key="url.type"
+                    :icon="socialIcons[url.type].icon"
+                    :color="socialIcons[url.type].color"
+                    :to="url.value"
+                    target="_blank"
+                    size="sm"
+                  >
+                    {{ url.additional_info }}
+                  </UButton>
+                </div>
               </div>
             </template>
           </UPageCard>

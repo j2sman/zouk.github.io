@@ -265,5 +265,12 @@ const handleRegionClick = (regionName) => {
     padding: 1rem;
     margin: -1rem;
   }
+
+  .region-label {
+    font-size: 12px;
+    font-weight: 700;
+    fill: #333333;
+    stroke-width: 1px;
+  }
 }
 </style>
