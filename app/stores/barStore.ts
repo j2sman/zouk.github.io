@@ -56,12 +56,12 @@ export const useBarStore = defineStore("bar", {
             .toLowerCase();
           const normalizedLocation = String(location).trim().toLowerCase();
 
-          if (import.meta.dev) {
-            console.log("Comparing locations:", {
-              barLocation: normalizedBarLocation,
-              searchLocation: normalizedLocation,
-            });
-          }
+          // if (import.meta.dev) {
+          //   console.log("Comparing locations:", {
+          //     barLocation: normalizedBarLocation,
+          //     searchLocation: normalizedLocation,
+          //   });
+          // }
 
           return normalizedBarLocation === normalizedLocation;
         });

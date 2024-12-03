@@ -128,7 +128,7 @@ const initMap = async () => {
           ? "#e4e4e4"
           : "#f5f5f5";
       })
-      .attr("stroke", "#fff")
+      .attr("stroke", "#aaa")
       .attr("stroke-width", "1.5")
       .on("click", (event, d) => {
         const locationKey = getLocationKey(d.properties.name);
@@ -152,7 +152,6 @@ const initMap = async () => {
       )
       .enter()
       .append("text")
-      .attr("class", "region-label")
       .attr("transform", (d) => {
         const locationKey = getLocationKey(d.properties.name);
         const regionData = LOCATION_LABEL_OFFSETS[locationKey];
@@ -172,13 +171,12 @@ const initMap = async () => {
         );
       })
       .attr("font-size", "14px")
-      .attr("fill", "#333333")
+      .attr("fill", "#555555")
       .attr("stroke", "#ffffff")
       .attr("stroke-width", "2px")
       .attr("paint-order", "stroke")
       .style("font-weight", "700")
       .style("cursor", "pointer")
-      .style("text-shadow", "2px 2px 4px rgba(0,0,0,0.2)")
       .attr("pointer-events", "all")
       .on("click", (event, d) => {
         handleRegionClick(d.properties.name);
@@ -313,16 +311,6 @@ const handleRegionClick = (regionName) => {
   opacity: 1;
 }
 
-.region-label {
-  transition: all 0.3s ease;
-  font-family: "Noto Sans KR", sans-serif;
-}
-
-.region-label:hover {
-  font-size: 16px;
-  font-weight: 800;
-}
-
 .map-container {
   padding: 2rem;
   border-radius: 1rem;
@@ -341,13 +329,6 @@ const handleRegionClick = (regionName) => {
   .map-container {
     padding: 1rem;
     margin: -1rem;
-  }
-
-  .region-label {
-    font-size: 12px;
-    font-weight: 700;
-    fill: #333333;
-    stroke-width: 1px;
   }
 }
 </style>
