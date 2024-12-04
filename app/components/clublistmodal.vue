@@ -140,6 +140,22 @@ onMounted(() => {
     observer.disconnect();
   });
 });
+
+// 이미지 확대/축소를 위한 상태만 유지
+const imageScale = ref(1);
+
+// 이미지 확대/축소 핸들러
+const handleWheel = (e) => {
+  e.preventDefault();
+  const delta = e.deltaY * -0.01;
+  const newScale = Math.min(Math.max(imageScale.value + delta, 1), 3);
+  imageScale.value = newScale;
+};
+
+// 이미지 리셋
+const resetImage = () => {
+  imageScale.value = 1;
+};
 </script>
 
 <template>
@@ -220,6 +236,28 @@ onMounted(() => {
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowfullscreen
                 />
+                <!-- image background -->
+                <div
+                  v-else-if="
+                    ['image'].includes(clubBackgroundMediaTypes[club.id])
+                  "
+                  class="club-image-wrapper"
+                >
+                  <img
+                    :src="
+                      getEmbedUrl(getUrlByType(club.urls, UrlType.background))
+                    "
+                    :data-club-id="club.id"
+                    class="club-image"
+                    :style="{
+                      transform: `scale(${imageScale})`,
+                    }"
+                    loading="lazy"
+                    alt=""
+                    @wheel.prevent="handleWheel"
+                    @dblclick="resetImage"
+                  />
+                </div>
               </div>
             </template>
 
@@ -313,6 +351,26 @@ onMounted(() => {
   pointer-events: none;
 }
 
+.club-image-container {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+.club-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: auto;
+  transition: transform 0.1s ease;
+  transform-origin: center;
+  user-select: none;
+}
+
 /* 컨텐츠의 z-index 추가 */
 :deep(.landing-hero-content) {
   position: relative;
@@ -328,5 +386,32 @@ onMounted(() => {
   opacity: 1;
   background-color: rgba(255, 255, 255, 1);
   backdrop-filter: blur(4px);
+}
+
+.club-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: #f5f5f5;
+}
+
+/* 스크롤바 스타일링 */
+.club-image-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.club-image-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.club-image-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.club-image-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>

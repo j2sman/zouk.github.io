@@ -161,6 +161,7 @@ export const getEmbedUrl = (background: string | null): string | null => {
         return strUrl;
       }
       case "video":
+      case "image":
         return background;
       default:
         return null;
